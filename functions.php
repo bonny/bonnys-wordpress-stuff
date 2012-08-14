@@ -1,6 +1,6 @@
 <?php
 
-require_once("ma/ma-simple-front-end-edit-buttons.php");
+require_once(dirname(__FILE__) . "/ep/ep-simple-front-end-edit-buttons.php");
 
 /**
  * EarthPeople debug
@@ -63,7 +63,7 @@ $ep->init();
  *
  * Usage:
  *
- * echo ma_get_post(19, "<div class='post-content'>%%CONTENT%%</div>");
+ * echo ep_get_post(19, "<div class='post-content'>%%CONTENT%%</div>");
  *
  * Which is so much shorter than (or other similar method):
  * $address_post_id = 19;
@@ -72,7 +72,7 @@ $ep->init();
  * $adress_content = apply_filters('the_content', $adress_content);
  * echo "<div class='post-content'>" . $adress_content . "</div>";
  */
-function ma_get_post($post_id, $format) {
+function ep_get_post($post_id, $format) {
 
 	$post_id = (int) $post_id;
 	if (!$post_id) return FALSE;
@@ -92,7 +92,7 @@ function ma_get_post($post_id, $format) {
 			$content = str_replace(']]>', ']]&gt;', $content);
 		}
 		if (strpos($format, "%%CONTENT_DIV%%") !== FALSE) {
-			$content_div = ma_get_the_content("body");
+			$content_div = ep_get_the_content("body");
 			if ($content_div) {
 				$content_div = "<div class='post-body'>$content_div</div>";
 			} else {
@@ -103,11 +103,11 @@ function ma_get_post($post_id, $format) {
 	
 		// only teaser
 		if (strpos($format, "%%TEASER%%") !== FALSE) {
-			$teaser = ma_get_the_content("teaser");
+			$teaser = ep_get_the_content("teaser");
 			$format = str_replace("%%TEASER%%", $teaser, $format);
 		}
 		if (strpos($format, "%%TEASER_DIV%%") !== FALSE) {
-			$teaser = trim(ma_get_the_content("teaser"));
+			$teaser = trim(ep_get_the_content("teaser"));
 			if ($teaser) {
 				$teaser = "<div class='post-teaser'>$teaser</div>";
 			} else {
@@ -117,9 +117,9 @@ function ma_get_post($post_id, $format) {
 		}
 	
 		// content with teaser and body marked in source
-		if (strpos($format, "%%MA_CONTENT%%") !== FALSE) {
-			$ma_content = ma_get_teaser_and_body($post_id);
-			$format = str_replace("%%MA_CONTENT%%", $ma_content, $format);
+		if (strpos($format, "%%ep_CONTENT%%") !== FALSE) {
+			$ep_content = ep_get_teaser_and_body($post_id);
+			$format = str_replace("%%ep_CONTENT%%", $ep_content, $format);
 		}
 		
 		$title = get_the_title();
@@ -127,17 +127,17 @@ function ma_get_post($post_id, $format) {
 	
 		ob_start(); edit_post_link(); $edit_link = ob_get_clean();
 		
-		$ma_edit = ma_get_edit();
-		$ma_edit_prio = ma_get_edit_prio();
-		$ma_edit_add = sfeeb_edit_add();
+		$ep_edit = ep_get_edit();
+		$ep_edit_prio = ep_get_edit_prio();
+		$ep_edit_add = sfeeb_edit_add();
 		
 		$format = str_replace("%%TITLE%%", $title, $format);
 		$format = str_replace("%%CONTENT%%", $content, $format);
 		$format = str_replace("%%PERMALINK%%", $permalink, $format);
 		$format = str_replace("%%EDIT%%", $edit_link, $format);
-		$format = str_replace("%%MA_EDIT%%", $ma_edit, $format);
-		$format = str_replace("%%MA_EDIT_PRIO%%", $ma_edit_prio, $format);
-		$format = str_replace("%%MA_EDIT_ADD%%", $ma_edit_add, $format);
+		$format = str_replace("%%ep_EDIT%%", $ep_edit, $format);
+		$format = str_replace("%%ep_EDIT_PRIO%%", $ep_edit_prio, $format);
+		$format = str_replace("%%ep_EDIT_ADD%%", $ep_edit_add, $format);
 		
 	endwhile; // end while have_posts
 
@@ -148,7 +148,7 @@ function ma_get_post($post_id, $format) {
 
 
 // lägg på siddjup i body + om aktuellt artikel har barn
-function ma_body_class($classes, $class) {
+function ep_body_class($classes, $class) {
 	global $post, $wp_query;
 	$queried_object = $wp_query->get_queried_object();
 	$child_count = 0;
@@ -189,7 +189,7 @@ function ma_body_class($classes, $class) {
 }
 
 
-function ma_post_get_first_child() {
+function ep_post_get_first_child() {
 	global $wp_query;
 	$queried_object = $wp_query->get_queried_object();
 	$args = array(
@@ -208,7 +208,7 @@ function ma_post_get_first_child() {
 
 
 // ger antal barn till den post som just nu visas
-function ma_post_childcount() {
+function ep_post_childcount() {
 	global $wp_query;
 	$queried_object = $wp_query->get_queried_object();
 	$child_count = 0;
@@ -229,7 +229,7 @@ function ma_post_childcount() {
  * Tell how deep down in the hierachy we are
  * @return int depth
  */
-function ma_post_depth() {
+function ep_post_depth() {
 	global $post;
 	$depth = 0;
 	$parents = get_post_ancestors($post);
@@ -256,7 +256,7 @@ function ma_post_depth() {
  * @author Pär Thernström 
  *
  */
-function ma_teaser_and_body($post_id = NULL) {
+function ep_teaser_and_body($post_id = NULL) {
 
 	global $post, $more;
 	$post_org = $post;
@@ -307,11 +307,11 @@ function ma_teaser_and_body($post_id = NULL) {
  but if teaser does not exist get body instead
  Good for listing/overview views
  */
-function ma_get_teaser_or_body() {
+function ep_get_teaser_or_body() {
 
-	$content = ma_get_the_content("teaser");
+	$content = ep_get_the_content("teaser");
 	if (empty($content)) {
-		$content = ma_get_the_content("body");
+		$content = ep_get_the_content("body");
 	}
 	return $content;
 }
@@ -324,7 +324,7 @@ function ma_get_teaser_or_body() {
  *
  * @author Pär Thernström, November, 2010
  */
-function ma_get_teaser_and_body($post_id = NULL) {
+function ep_get_teaser_and_body($post_id = NULL) {
 
 	$out = "";
 	
@@ -472,7 +472,7 @@ function page_breadcrumb_wptitle( $title, $sep, $seplocation = null ) {
  * @param int $page_id
  * @return bool
  */
-function ma_is_child_of($page_id) {
+function ep_is_child_of($page_id) {
 	global $post;
 	$is_child = false;
 	$parents = get_post_ancestors($post);
@@ -492,7 +492,7 @@ function ma_is_child_of($page_id) {
 	if it is, the parent page id is returned
 	if not, false is returned
 */
-function ma_is_subpage() {
+function ep_is_subpage() {
 	global $post;                                 // load details about this page
         if ( is_page() && $post->post_parent ) {      // test to see if the page has a parent
                $parentID = $post->post_parent;        // the ID of the parent is this
@@ -502,26 +502,26 @@ function ma_is_subpage() {
         };
 };
 
-function ma_edit_add() {
+function ep_edit_add() {
 	echo sfeeb_edit_add();
 }
-function ma_get_edit_add() {
+function ep_get_edit_add() {
 	return sfeeb_edit_add();
 }
 
-function ma_edit_prio() {
+function ep_edit_prio() {
 	echo sfeeb_edit_prio();
 }
 
-function ma_get_edit_prio() {
+function ep_get_edit_prio() {
 	return sfeeb_edit_prio();
 }
 
-function ma_get_edit() {
+function ep_get_edit() {
 	return sfeeb_edit();	
 }
 
-function ma_edit() {
+function ep_edit() {
 	echo sfeeb_edit();	
 }
 
@@ -534,7 +534,7 @@ function ma_edit() {
  * @param what to get all (default) | teaser | body
  * @return string
  */
-function ma_get_the_content($what = "all") {
+function ep_get_the_content($what = "all") {
 	
 	global $more;
 	$more_org = $more;

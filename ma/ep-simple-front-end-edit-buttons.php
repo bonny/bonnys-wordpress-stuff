@@ -57,11 +57,11 @@ add_action("wp_footer", "sfeeb_wp_footer");
 add_action("init", "sfeeb_init");
 add_filter("get_pages", "sfeeb_get_pages", 10, 2);
 
-// check if ma_prio is set and store in global variable
+// check if ep_prio is set and store in global variable
 function sfeeb_get_pages($pages, $arg2) {
 	global $sfeeb_arg_is_set_to_show_prio_buttons;
 	$sfeeb_arg_is_set_to_show_prio_buttons = FALSE;
-	if (isset($arg2["ma_prio"])) {
+	if (isset($arg2["ep_prio"])) {
 
 		$sfeeb_arg_is_set_to_show_prio_buttons = TRUE;
 	}
