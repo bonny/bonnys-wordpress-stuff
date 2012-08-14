@@ -1,0 +1,589 @@
+<?php
+
+require_once("ma/ma-simple-front-end-edit-buttons.php");
+
+/**
+ * EarthPeople debug
+ * För jag gillar att skriva ut variabler...
+ */
+function ep_d($var) {
+
+	printf('%1$sVariable is of type <strong>"%2$s"</strong> with value:%1$s', "\n", gettype($var));
+	echo "<pre>";
+	print_r($var);
+	echo "</pre>";
+}
+
+class EP {
+
+	public $stylesheet_directory;
+
+	function init() {
+		
+		$this->stylesheet_directory = get_bloginfo("stylesheet_directory");
+		
+		// init stuff
+		// add_filter("init", array($this, "add_menus"));
+		
+	}
+	
+	function add_post_types() {
+
+		/*
+		register_post_type("smakmatare", array(
+			"label" 		=> __("Smakmätare", "jn"),
+			"public"	 	=> FALSE,
+			"menu_position"	=> 5,
+			"has_archive" 	=> FALSE,
+			"show_in_nav_menus" => TRUE,
+			"show_ui" => TRUE
+		));
+		*/
+
+	}
+	
+	function add_menus() {
+
+		/*
+		register_nav_menus(array(
+			"nav_primary" => "Huvudmeny"
+		));
+		*/
+
+	}
+	
+}
+$ep = new EP();
+$ep->init();
+
+
+/**
+ * Super Small and Simple WP Template thingie
+ * Because I'm tired of throwing global posts around and using setuppostdata 1000 frickin times on a site.
+ *
+ * Usage:
+ *
+ * echo ma_get_post(19, "<div class='post-content'>%%CONTENT%%</div>");
+ *
+ * Which is so much shorter than (or other similar method):
+ * $address_post_id = 19;
+ * $adress_post = get_post($address_post_id);
+ * $adress_content = $adress_post->post_content;
+ * $adress_content = apply_filters('the_content', $adress_content);
+ * echo "<div class='post-content'>" . $adress_content . "</div>";
+ */
+function ma_get_post($post_id, $format) {
+
+	$post_id = (int) $post_id;
+	if (!$post_id) return FALSE;
+
+	$custom_query = new WP_Query(array(
+		"post_type" => "any",
+		"post__in" => array($post_id)
+	));
+
+	while($custom_query->have_posts()) : $custom_query->the_post();
+
+		$content = "";
+		// only get content if %%CONTENT%% exists. getting the_content multiple times can have strange effects sometimes
+		if (strpos($format, "%%CONTENT%%") !== FALSE) {
+			$content = get_the_content();
+			$content = apply_filters('the_content', $content);
+			$content = str_replace(']]>', ']]&gt;', $content);
+		}
+		if (strpos($format, "%%CONTENT_DIV%%") !== FALSE) {
+			$content_div = ma_get_the_content("body");
+			if ($content_div) {
+				$content_div = "<div class='post-body'>$content_div</div>";
+			} else {
+				$content_div = "";
+			}
+			$format = str_replace("%%CONTENT_DIV%%", $content_div, $format);
+		}
+	
+		// only teaser
+		if (strpos($format, "%%TEASER%%") !== FALSE) {
+			$teaser = ma_get_the_content("teaser");
+			$format = str_replace("%%TEASER%%", $teaser, $format);
+		}
+		if (strpos($format, "%%TEASER_DIV%%") !== FALSE) {
+			$teaser = trim(ma_get_the_content("teaser"));
+			if ($teaser) {
+				$teaser = "<div class='post-teaser'>$teaser</div>";
+			} else {
+				$teaser = "";
+			}
+			$format = str_replace("%%TEASER_DIV%%", $teaser, $format);
+		}
+	
+		// content with teaser and body marked in source
+		if (strpos($format, "%%MA_CONTENT%%") !== FALSE) {
+			$ma_content = ma_get_teaser_and_body($post_id);
+			$format = str_replace("%%MA_CONTENT%%", $ma_content, $format);
+		}
+		
+		$title = get_the_title();
+		$permalink = get_permalink();
+	
+		ob_start(); edit_post_link(); $edit_link = ob_get_clean();
+		
+		$ma_edit = ma_get_edit();
+		$ma_edit_prio = ma_get_edit_prio();
+		$ma_edit_add = sfeeb_edit_add();
+		
+		$format = str_replace("%%TITLE%%", $title, $format);
+		$format = str_replace("%%CONTENT%%", $content, $format);
+		$format = str_replace("%%PERMALINK%%", $permalink, $format);
+		$format = str_replace("%%EDIT%%", $edit_link, $format);
+		$format = str_replace("%%MA_EDIT%%", $ma_edit, $format);
+		$format = str_replace("%%MA_EDIT_PRIO%%", $ma_edit_prio, $format);
+		$format = str_replace("%%MA_EDIT_ADD%%", $ma_edit_add, $format);
+		
+	endwhile; // end while have_posts
+
+	wp_reset_postdata();
+
+	return $format;
+}
+
+
+// lägg på siddjup i body + om aktuellt artikel har barn
+function ma_body_class($classes, $class) {
+	global $post, $wp_query;
+	$queried_object = $wp_query->get_queried_object();
+	$child_count = 0;
+	if (isset($queried_object)) {
+		$parents = get_post_ancestors($post->ID);
+		$children = get_children(array(
+			"post_parent" => $post->ID,
+			"post_type" => $queried_object->post_type,
+			"post_status" => "publish"
+		));
+		$child_count = sizeof($children);
+	}
+	$classes[] = "post-childcount-$child_count";
+	if ($child_count) {
+		$classes[] = "post-has-children";
+	} else {
+		$classes[] = "post-no-children";
+	}
+	
+	// skriv ut depth också
+	$depth = 0;
+	$parents = get_post_ancestors($post);
+	$top_parent_id = $post->ID;
+	if ($parents) {
+		foreach ($parents as $one_parent_id) {
+			$parent_post = get_post($parent_post);
+			if ($parent_post->post_parent) {
+				$top_parent_id = $one_parent_id;
+				$depth++;
+			}
+		}
+	}
+
+	$classes[] = "post-depth-$depth";
+	$classes[] = "post-top-id-$top_parent_id";
+	
+	return $classes;
+}
+
+
+function ma_post_get_first_child() {
+	global $wp_query;
+	$queried_object = $wp_query->get_queried_object();
+	$args = array(
+		"post_parent" => $queried_object->ID,
+		"post_type" => $queried_object->post_type,
+		"post_status" => "publish",
+		"orderby" => "menu_order",
+		"order" => "ASC",
+	);
+	$children = get_children($args);
+	if (!$children) {
+		return false;
+	}
+	return current($children);
+}
+
+
+// ger antal barn till den post som just nu visas
+function ma_post_childcount() {
+	global $wp_query;
+	$queried_object = $wp_query->get_queried_object();
+	$child_count = 0;
+	if (isset($queried_object)) {
+		$parents = get_post_ancestors($queried_object->ID);
+		$args = array(
+			"post_parent" => $queried_object->ID,
+			"post_type" => $queried_object->post_type,
+			"post_status" => "publish"
+		);
+		$children = get_children($args);
+		$child_count = sizeof($children);
+	}
+	return $child_count;
+}
+
+/**
+ * Tell how deep down in the hierachy we are
+ * @return int depth
+ */
+function ma_post_depth() {
+	global $post;
+	$depth = 0;
+	$parents = get_post_ancestors($post);
+	if ($parents) {
+		foreach ($parents as $one_parent_id) {
+			$parent_post = get_post($parent_post);
+			if ($parent_post->post_parent) {
+				$depth++;
+			}
+		}
+	}
+	return $depth;
+}
+
+/**
+ * This is a nifty little finction that makes is possible to
+ * format teaser and body differently
+ * 
+ * It will output:
+ * - teaser/text before the read-more-thingie wrapped in div.post-teaser
+ * - body/text after the read-more-thingie wrapped in div.post-body
+ * - ..but only if each one exists. so you can get teaser + body, or only teaser, or only body
+ *
+ * @author Pär Thernström 
+ *
+ */
+function ma_teaser_and_body($post_id = NULL) {
+
+	global $post, $more;
+	$post_org = $post;
+	$more_org = $more;
+		
+	if (!$post_id) {
+		$post_id = $post->ID;
+	}
+
+	$post = get_post($post_id);
+	setup_postdata($post);
+	
+	// Get teaser/text before the "read me"
+	$content = $post->post_content;
+	if ( preg_match('/<!--more(.*?)?-->/', $content, $matches) ) {
+		// more-tag exists
+		$more = 0;
+		ob_start();
+		the_content("", true);
+		$teaser = ob_get_clean();
+	} else {
+		$teaser = "";
+	}
+	
+	// Get the content/text after "read me"
+	// funkar
+	$more = 1;
+	ob_start();
+	the_content(NULL, true);
+	$body = ob_get_clean();
+	if ($teaser) {
+		$teaser = "<div class='post-teaser'>$teaser</div>";
+	}
+
+	if ($body) {
+		$body = "<div class='post-body'>$body</div>";
+	}
+
+	$post = $post_org;
+	$more = $more_org;
+	setup_postdata($post);
+	echo $teaser . $body;
+
+}
+	
+/**
+ Get teaser,
+ but if teaser does not exist get body instead
+ Good for listing/overview views
+ */
+function ma_get_teaser_or_body() {
+
+	$content = ma_get_the_content("teaser");
+	if (empty($content)) {
+		$content = ma_get_the_content("body");
+	}
+	return $content;
+}
+
+
+/**
+ * Returns both teaser and body
+ * Each wrapped in a <div> with class post-teaser and post-body
+ * If any of them don't exist, their <div> won't be outputed
+ *
+ * @author Pär Thernström, November, 2010
+ */
+function ma_get_teaser_and_body($post_id = NULL) {
+
+	$out = "";
+	
+	global $post;
+	$post_org = $post;
+
+	if (!$post_id) {
+		$post_id = $post->ID;
+	}
+
+	global $post;
+	$post_org = $post;
+	$post = get_post($post_id);
+	setup_postdata($post);
+
+	// only posts that are published are allowed
+	if ($post->post_status != "publish") {
+		return "";
+	}
+	
+	// get content, except teaser
+	$body = get_the_content(null, true); // true = stripteaser
+	if ($body) {
+		$body = preg_replace('/<span id="more-[\d]+"><\/span>/', "", $body);
+		
+		// apply filters on the content
+		$body = apply_filters('the_content', $body);
+		$body = str_replace(']]>', ']]&gt;', $body);
+
+		$body = "<div class='post-body'>\n\n$body</div>";
+	}
+	// get teaser, only teaser..
+	$teaser = "";
+	$content = get_the_content(null, false); // true = stripteaser
+	$arr = preg_split('/<span id="more-[\d]+"><\/span>/', $content);
+	if (sizeof($arr) == 2) {
+		// vi har en teaser
+		// should we apply filters?
+		$teaser = $arr[0];
+		$teaser = apply_filters('the_content', $teaser);
+		$teaser = str_replace(']]>', ']]&gt;', $teaser);
+		$teaser = "<div class='post-teaser'>\n\n" . $teaser . "</div>";
+	}
+
+	$out .= $teaser . $body;
+
+	//echo "yyy{$out}yyy";
+
+	$post = $post_org;
+	setup_postdata($post);
+
+	return $out;
+}
+
+
+// Filter wp_title() to add the ancenstors
+// So for example the title "Medarbetare | Företaget AB" will become "Medarbetare | Om Oss | Företaget AB"
+// Do the title modification
+// Code from plugin "Breadcrumb Titles For Pages"
+// Modified by Pär Thernström
+function page_breadcrumb_wptitle( $title, $sep, $seplocation = null ) {
+	global $wp_query;
+
+	// Posts don't have parents
+	if ( !is_page() )
+		return $title;
+
+	$post = $wp_query->get_queried_object();
+
+	// If this is a top level Page, then there's nothing to modify
+	if ( 0 == $post->post_parent )
+		return $title;
+
+	$prefix = " $sep ";
+
+	// Figure out where the seperator is since the filter doesn't pass $seplocation pre-WordPress 2.7
+	if ( null === $seplocation )
+		$seplocation = ( $prefix === substr( $title, strlen( $prefix ) * -1 ) ) ? 'right' : 'left';
+
+	// Copy the ancestors value so we can modify it
+	$ancestors = $post->ancestors;
+
+	// Prepend the current page onto the front of the list so it shows up in the title
+	array_unshift( $ancestors, $post->ID );
+
+	// If the blog title is not on the right (i.e. the left), then we need to flip the order
+	if ( 'right' != $seplocation )
+		$ancestors = array_reverse( $ancestors );
+
+
+	// Get all of the titles
+	$titles = array();
+	$number_of_ancestors = sizeof($ancestors);
+	$loop_num = 0;
+	foreach ( $ancestors as $ancestor ) {
+
+		// fetch from menu label if we have my plugin installed
+		// @todo: should check if plugin is activated too...
+		// but only if it's the last item
+		if ($loop_num == 0) {
+			// the first item = let it use custom title through for example simple seo
+			$ancestortitle = get_the_title($ancestor);
+			$ancestortitle = apply_filters( 'single_post_title', $ancestortitle );
+		} else {
+			$use_custom_page_title = (bool) get_post_meta($ancestor, "_simple_seo_use_custom_menu_label", true);
+			if ($use_custom_page_title) {
+				$ancestortitle = get_post_meta($ancestor, "_simple_seo_custom_menu_label_value", true);
+			} else {
+				$ancestortitle = get_the_title($ancestor);
+				#$ancestortitle = apply_filters( 'single_post_title', $ancestortitle );
+			}
+		}
+
+
+		#$ancestortitle = get_the_title($ancestor);
+		#$ancestortitle_after_filter = apply_filters( 'single_post_title', $ancestortitle );
+		#if (!$ancestortitle_after_filter) {
+		#	$ancestortitle_after_filter = $ancestortitle;
+		#}
+	
+		$titles[] = strip_tags( $ancestortitle );
+
+		$loop_num++;
+	}
+
+	// Create the breadcrumb list
+	$title = implode( $prefix, $titles );
+
+ 	// Determines position of the separator
+	if ( 'right' == $seplocation )
+		$title = $title . $prefix;
+	else
+		$title = $prefix . $title;
+
+	// remove | if at first position
+	$regexp = "/^($prefix)/";
+	$regexp = str_replace("|", '\|', $regexp);
+	$title = preg_replace($regexp, "", $title);
+
+	return $title;
+}
+
+/**
+ * check if current page/post is a child post of page/post with id $page_id
+ * @param int $page_id
+ * @return bool
+ */
+function ma_is_child_of($page_id) {
+	global $post;
+	$is_child = false;
+	$parents = get_post_ancestors($post);
+	if ($parents) {
+		foreach ($parents as $one_parent_id) {
+			if ($one_parent_id == $page_id) {
+				$is_child = true;
+				break;
+			}
+		}
+	}
+	return $is_child;
+};
+
+/*
+	check if current page is a subpage
+	if it is, the parent page id is returned
+	if not, false is returned
+*/
+function ma_is_subpage() {
+	global $post;                                 // load details about this page
+        if ( is_page() && $post->post_parent ) {      // test to see if the page has a parent
+               $parentID = $post->post_parent;        // the ID of the parent is this
+               return $parentID;                      // return the ID
+        } else {                                      // there is no parent so...
+               return false;                          // ...the answer to the question is false
+        };
+};
+
+function ma_edit_add() {
+	echo sfeeb_edit_add();
+}
+function ma_get_edit_add() {
+	return sfeeb_edit_add();
+}
+
+function ma_edit_prio() {
+	echo sfeeb_edit_prio();
+}
+
+function ma_get_edit_prio() {
+	return sfeeb_edit_prio();
+}
+
+function ma_get_edit() {
+	return sfeeb_edit();	
+}
+
+function ma_edit() {
+	echo sfeeb_edit();	
+}
+
+
+
+/**
+ * Hämtar alla innehåll i content
+ * eller bara teaser, eller bara body
+ *
+ * @param what to get all (default) | teaser | body
+ * @return string
+ */
+function ma_get_the_content($what = "all") {
+	
+	global $more;
+	$more_org = $more;
+	$more = 1;
+	
+	$content = get_the_content();
+	$content = apply_filters('the_content', $content);
+	$content = str_replace(']]>', ']]&gt;', $content);
+
+	// <span id="more-2"></span>
+	// 2 = sidans id?
+	// force_balance_tags
+	// plocka ut allt, före, eller efter more
+	if ($what != "all") {
+		
+		$arr = preg_split('/<span id="more-[\d]+"><\/span>/', $content);
+		#echo "content: $content";
+		#echo "size: " . sizeof($arr);
+		#d($arr);
+		#exit;
+		if (sizeof($arr) == 1) {
+
+			// fanns inte både ock
+			// söker vi body men bara teaser finns borde vi ge tillbaka inget liksom
+			// eller allt räknas som body, inget som teaser?
+			if ($what == "teaser") {
+				return "";
+			} elseif ($what == "body") {
+				return $content;
+			}
+			
+		} elseif (sizeof($arr) == 2) {
+			// verkar ha gått vägen
+			$arr[0] = force_balance_tags($arr[0]);
+			$arr[1] = force_balance_tags($arr[1]);
+			
+			if ($what == "teaser") {
+				return $arr[0];
+			} elseif ($what == "body") {
+				return $arr[1];
+			}
+			
+		}
+	
+	}
+
+	$more = $more_org;
+
+	return $content;
+}
+
+
