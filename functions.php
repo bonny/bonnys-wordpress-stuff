@@ -72,19 +72,30 @@ $ep->init();
  * $adress_content = apply_filters('the_content', $adress_content);
  * echo "<div class='post-content'>" . $adress_content . "</div>";
  */
-function ep_get_post($post_id, $format) {
+function ep_get_post($post_id_or_args, $format) {
 
-	$post_id = (int) $post_id;
-	if (!$post_id) return FALSE;
+	$arr_wp_query_options = array(
+		"post_type" => "any"
+	);
 
-	$custom_query = new WP_Query(array(
-		"post_type" => "any",
-		"post__in" => array($post_id)
-	));
+	if (is_integer($post_id_or_args)) {
+		// If post_id is an integer then just show that one
+		$arr_wp_query_options["post__in"] = array($post_id_or_args);
+	} else {
+		// if post_id is an array or string then we except a wp_query-options-array
+		$arr_wp_query_options = wp_parse_args( $post_id_or_args, $arr_wp_query_options );
+	}
+	#ep_d($post_id_or_args);
+	#ep_d($arr_wp_query_options);
 
+	$output_combined = "";
+	$format_org = $format;
+
+	$custom_query = new WP_Query($arr_wp_query_options);
 	while($custom_query->have_posts()) : $custom_query->the_post();
 
 		$content = "";
+		$format = $format_org;
 		// only get content if %%CONTENT%% exists. getting the_content multiple times can have strange effects sometimes
 		if (strpos($format, "%%CONTENT%%") !== FALSE) {
 			$content = get_the_content();
@@ -117,8 +128,8 @@ function ep_get_post($post_id, $format) {
 		}
 	
 		// content with teaser and body marked in source
-		if (strpos($format, "%%ep_CONTENT%%") !== FALSE) {
-			$ep_content = ep_get_teaser_and_body($post_id);
+		if (strpos($format, "%%EP_CONTENT%%") !== FALSE) {
+			$ep_content = ep_get_teaser_and_body(get_the_id());
 			$format = str_replace("%%ep_CONTENT%%", $ep_content, $format);
 		}
 		
@@ -135,15 +146,40 @@ function ep_get_post($post_id, $format) {
 		$format = str_replace("%%CONTENT%%", $content, $format);
 		$format = str_replace("%%PERMALINK%%", $permalink, $format);
 		$format = str_replace("%%EDIT%%", $edit_link, $format);
-		$format = str_replace("%%ep_EDIT%%", $ep_edit, $format);
-		$format = str_replace("%%ep_EDIT_PRIO%%", $ep_edit_prio, $format);
-		$format = str_replace("%%ep_EDIT_ADD%%", $ep_edit_add, $format);
+		$format = str_replace("%%EP_EDIT%%", $ep_edit, $format);
+		$format = str_replace("%%EP_EDIT_PRIO%%", $ep_edit_prio, $format);
+		$format = str_replace("%%EP_EDIT_ADD%%", $ep_edit_add, $format);
+		
+		// functions to get values form simple fields
+		// %%SF_IMAGE_4_1_0_size%% = output the first image from field 1 from field group 4 and get thumbnail "size"
+		preg_match_all('/%%SF_IMAGE_(\d+)_(\d+)_(\d+)_(.+)%%/', $format, $matches);
+		// %%SF_IMAGE_4_1_0_full%%
+		#ep_d($matches);
+		if ($matches) {
+			// For each match = for each %%SF_IMAGE...
+			for ($i = 0; $i < sizeof($matches[0]); $i++) {
+				$full_match 		= $matches[0][$i];
+				$fieldgroup_id 		= $matches[1][$i];
+				$field_id 			= $matches[2][$i];
+				$imagenum_to_output	= $matches[3][$i];
+				$image_size			= $matches[4][$i];
+				$image_tag 			= "";
+				$values = (array) simple_fields_get_post_group_values(get_the_id(), $fieldgroup_id, false, 2);
+				if ( isset($values[$imagenum_to_output][$field_id]) ) {
+					// image exist at that position
+					$image_tag = wp_get_attachment_image($values[$imagenum_to_output][$field_id], $image_size);
+				}
+				$format = str_replace($full_match, $image_tag, $format);
+			}
+		}
+		
+		$output_combined .= $format;
 		
 	endwhile; // end while have_posts
 
 	wp_reset_postdata();
 
-	return $format;
+	return $output_combined;
 }
 
 

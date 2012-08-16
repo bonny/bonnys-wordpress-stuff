@@ -38,10 +38,8 @@ TODO
 
 // Simple Front End Edit Buttons = SFEEB
 define( "SFEEB_VERSION", "0.2");
-#define( "SFEEB_URL", WP_PLUGIN_URL . '/simple-front-end-edit-buttons/');
-#define( "SFEEB_URL", dirname(__FILE__));
-define( "SFEEB_URL", get_template_directory_uri() . "/ma");
-define( "SFEEB_NAME", "Simple Front End Edit Buttons");
+define( "SFEEB_URL", get_template_directory_uri() . "/ep");
+define( "SFEEB_NAME", "EP Simple Front End Edit Buttons");
 
 /**
  * Hello. Let's get started now, shall we?
