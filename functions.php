@@ -24,6 +24,20 @@ class EP {
 		
 		// init stuff
 		// add_filter("init", array($this, "add_menus"));
+
+		add_filter( 'post_link', array($this, 'the_permalink_make_relative' ));
+		add_filter( 'post_type_link', array($this, 'the_permalink_make_relative' ));
+		add_filter( 'page_link', array($this, 'the_permalink_make_relative' ));
+
+		/**
+		 * Makes the permalink for a post/page/custom post type more futureproof by creating
+		 * relative paths instead of absolute paths.
+		 * This is a benefit when developing a website on several domains, so you don't have to change all
+		 * links from http://beta.example.com/ to http://example.com/.
+		 */
+		function the_permalink_make_relative($input) {
+			return wp_make_link_relative($input);
+		}
 		
 	}
 	
