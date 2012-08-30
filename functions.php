@@ -156,6 +156,7 @@ function ep_get_post($post_id_or_args, $format) {
 		$ep_edit_prio = ep_get_edit_prio();
 		$ep_edit_add = sfeeb_edit_add();
 		
+		$format = str_replace("%%ID%%", get_the_ID(), $format);
 		$format = str_replace("%%TITLE%%", $title, $format);
 		$format = str_replace("%%CONTENT%%", $content, $format);
 		$format = str_replace("%%PERMALINK%%", $permalink, $format);
@@ -186,7 +187,20 @@ function ep_get_post($post_id_or_args, $format) {
 				$format = str_replace($full_match, $image_tag, $format);
 			}
 		}
-		
+
+		// Get a simple text value from simple fields
+		// %%SF_IMAGE_field_name%%
+		preg_match_all('/%%SF_TEXT_(.+)%%/', $format, $matches);
+		if ($matches) {
+			// For each match = for each %%SF_TEXT...
+			for ($i = 0; $i < sizeof($matches[0]); $i++) {
+				$full_match = $matches[0][$i];
+				$field_name	= $matches[1][$i];
+				$text_value = simple_fields_value($field_name);
+				$format = str_replace($full_match, $text_value, $format);
+			}
+		}
+
 		$output_combined .= $format;
 		
 	endwhile; // end while have_posts
