@@ -1,44 +1,12 @@
 <?php
-/*
-Plugin Name: Simple Front End Edit Buttons
-Plugin URI: http://eskapism.se/code-playground/simple-front-end-edit-buttons/
-Description: Add public edit buttons to your website. They can be used to change post order, adding posts, or editing posts.
-Version: 0.1
-Author: Pär Thernström
-Author URI: http://eskapism.se/
-License: GPL2
-*/
-
-/*  Copyright 2010  Pär Thernström (email: par.thernstrom@gmail.com)
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License, version 2, as 
-    published by the Free Software Foundation.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
-
-/*
-Changelog
-
-0.2
-- Added options to wp_list_pages to explicitly add edit and prio buttons
-- & > &amp; in edit URLs
-
-TODO
-
-*/
+/**
+ * Simple Front End Edit Buttons
+ * Functions and stuff to enable support for small funky edit buttons for posts and widgets
+ */
 
 // Simple Front End Edit Buttons = SFEEB
-define( "SFEEB_VERSION", "0.2");
-define( "SFEEB_URL", get_template_directory_uri() . "/ep");
+define( "SFEEB_VERSION", "0.3");
+define( "SFEEB_URL", wp_make_link_relative(get_template_directory_uri() . "/ep"));
 define( "SFEEB_NAME", "EP Simple Front End Edit Buttons");
 
 /**
@@ -54,6 +22,68 @@ add_action("wp_head", "sfeeb_wp_head");
 add_action("wp_footer", "sfeeb_wp_footer");
 add_action("init", "sfeeb_init");
 add_filter("get_pages", "sfeeb_get_pages", 10, 2);
+
+// Widget related actions
+add_action("dynamic_sidebar_params", "sfeeb_dynamic_sidebar_params");
+add_action("widgets_admin_page", "sfeeb_widgets_admin_page");
+
+/**
+ * Create widget for related stuff for blog posts
+ */
+function sfeeb_widgets_admin_page() {
+
+	if (isset($_GET["ep_edit_widget"])) {
+		$ep_edit_widget_id = $_GET["ep_edit_widget_id"];
+		?>
+		<script>
+		jQuery(function($) {
+
+			var widgets = $("div.widget");
+			widgets.each(function(i, elm) {
+
+				// Find widget that ends with our id
+				var elm_id = elm.id;
+				if (elm_id.match(/widget-[\d]+_(<?php echo $ep_edit_widget_id ?>)/)) {
+
+					var $elm = $(elm);
+					$in = $elm.find(".widget-inside");
+					$in.slideDown("slow", function() {
+						$elm.effect("highlight", {}, 4000);
+					});
+					
+				}
+			});
+		});
+		</script>
+		<?
+	}
+}
+
+function sfeeb_dynamic_sidebar_params($info) {
+	
+	if (!is_admin()) {
+	
+		// can disable by adding filter sfeeb_show_widget_edit with return false
+		$show_edit = apply_filters("sfeeb_show_widget_edit", TRUE);
+		
+		foreach ($info as & $one) {
+			
+			$one["before_widget"] .= sprintf('
+				<div class="ep_edit_widget"><a href="%2$s"><img src="%3$s" title="Edit widget %1$s"></a></div>
+				',
+				esc_attr($one["widget_name"]),
+				home_url("/wp-admin/widgets.php?ep_edit_widget=1&amp;ep_edit_widget_id=" . $one["widget_id"]),
+				SFEEB_URL . "/edit.png"
+			);
+
+		}
+
+	}
+
+	return $info;
+	
+}
+
 
 // check if ep_prio is set and store in global variable
 function sfeeb_get_pages($pages, $arg2) {
@@ -83,7 +113,8 @@ function sfeeb_wp_head() {
 			line-height: 1;
 			display: inline;
 		}
-		a.sfeeb_edit {
+		a.sfeeb_edit,
+		.ep_edit_widget {
 			opacity: .5;
 			-ms-filter: "alpha(opacity=50)";
 			margin-right: 1px;
@@ -91,13 +122,23 @@ function sfeeb_wp_head() {
 			display: inline !important;
 			padding: 0 !important;
 		}
-		a.sfeeb_edit:hover {
+		a.sfeeb_edit:hover,
+		.ep_edit_widget:hover {
 			opacity: 1;
 			-ms-filter: "alpha(opacity=100)";
 		}
-		a.sfeeb_edit img {
+		a.sfeeb_edit img,
+		.ep_edit_widget img
+		 {
 			width: 13px;
 			height: 13px;
+		}
+
+		.ep_edit_widget {
+			position: absolute;
+			top: 5px;
+			right: 5px;
+			opacity: .5;
 		}
 	</style>
 	<?php

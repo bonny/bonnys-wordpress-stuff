@@ -1,6 +1,8 @@
 <?php
 
-require_once(dirname(__FILE__) . "/ep/ep-simple-front-end-edit-buttons.php");
+/**
+ * Misc useful functions go here
+ */
 
 /**
  * EarthPeople debug
@@ -13,63 +15,6 @@ function ep_d($var) {
 	print_r($var);
 	echo "</pre>";
 }
-
-class EP {
-
-	public $stylesheet_directory;
-
-	function init() {
-		
-		$this->stylesheet_directory = get_bloginfo("stylesheet_directory");
-		
-		// init stuff
-		// add_filter("init", array($this, "add_menus"));
-
-		add_filter( 'post_link', array($this, 'the_permalink_make_relative' ));
-		add_filter( 'post_type_link', array($this, 'the_permalink_make_relative' ));
-		add_filter( 'page_link', array($this, 'the_permalink_make_relative' ));
-
-		/**
-		 * Makes the permalink for a post/page/custom post type more futureproof by creating
-		 * relative paths instead of absolute paths.
-		 * This is a benefit when developing a website on several domains, so you don't have to change all
-		 * links from http://beta.example.com/ to http://example.com/.
-		 */
-		function the_permalink_make_relative($input) {
-			return wp_make_link_relative($input);
-		}
-		
-	}
-	
-	function add_post_types() {
-
-		/*
-		register_post_type("smakmatare", array(
-			"label" 		=> __("Smakmätare", "jn"),
-			"public"	 	=> FALSE,
-			"menu_position"	=> 5,
-			"has_archive" 	=> FALSE,
-			"show_in_nav_menus" => TRUE,
-			"show_ui" => TRUE
-		));
-		*/
-
-	}
-	
-	function add_menus() {
-
-		/*
-		register_nav_menus(array(
-			"nav_primary" => "Huvudmeny"
-		));
-		*/
-
-	}
-	
-}
-$ep = new EP();
-$ep->init();
-
 
 /**
  * Super Small and Simple WP Template thingie
@@ -650,4 +595,132 @@ function ep_get_the_content($what = "all") {
 	return $content;
 }
 
+
+/**
+ * Simple wrapper for native get_template_part()
+ * Allows you to pass in an array of parts and output them in your theme
+ * e.g. <?php get_template_parts(array('part-1', 'part-2')); ?>
+ *
+ * @param 	array 
+ * @return 	void
+ * @author 	Keir Whitaker
+ **/
+function get_template_parts( $parts = array() ) {
+	foreach( $parts as $part ) {
+		get_template_part( $part );
+	};
+}
+
+/**
+ * Pass in a path and get back the page ID
+ * e.g. get_page_id_from_path('about/terms-and-conditions');
+ *
+ * @param 	string 
+ * @return 	integer
+ * @author 	Keir Whitaker
+ **/
+function get_page_id_from_path( $path ) {
+	$page = get_page_by_path( $path );
+	if( $page ) {
+		return $page->ID;
+	} else {
+		return null;
+	};
+}
+
+/**
+ * Append page slugs to the body class
+ * NB: Requires init via add_filter('body_class', 'add_slug_to_body_class');
+ *
+ * @param 	array 
+ * @return 	array
+ * @author 	Keir Whitaker
+ */
+function add_slug_to_body_class( $classes ) {
+	global $post;
+   
+	if( is_home() ) {			
+		$key = array_search( 'blog', $classes );
+		if($key > -1) {
+			unset( $classes[$key] );
+		};
+	} elseif( is_page() ) {
+		$classes[] = sanitize_html_class( $post->post_name );
+	} elseif(is_singular()) {
+		$classes[] = sanitize_html_class( $post->post_name );
+	};
+
+	return $classes;
+}
+
+/**
+ * Get the category id from a category name
+ *
+ * @param 	string 
+ * @return 	string
+ * @author 	Keir Whitaker
+ */
+function get_category_id( $cat_name ){
+	$term = get_term_by( 'name', $cat_name, 'category' );
+	return $term->term_id;
+}
+
+
+/**
+ * Remove image title attributes. Thank you Google and search result number one or two: http://www.kevinleary.net/remove-title-attributes-images-wordpress/
+ *
+ * Remove the "title" attribute from all image attachments and functions
+ * using the wp_get_attachment_image() function
+ *
+ * @param $attr An array of attributes for the <img />
+ * @return $attr Filtered attributes without the title
+ */
+function remove_attachment_title_attr( $attr ) {
+	unset($attr['title']);
+	return $attr;
+}
+
+/**
+ * Makes the permalink for a post/page/custom post type more futureproof by creating
+ * relative paths instead of absolute paths.
+ * This is a benefit when developing a website on several domains, so you don't have to change all
+ * links from http://beta.example.com/ to http://example.com/.
+ */
+function relativize_links() {
+	$arr_filters = array(
+		"post_link", 
+		"post_type_link", 
+		"page_link", 
+		// "theme_root_uri", // when i have some problem enqueing styles when wp is in subdir
+		"wp_get_attachment_url", 
+		"term_link", 
+		"tag_link", 
+		"category_link"
+	);
+ 	foreach ($arr_filters as $filter_name) {
+ 		add_filter($filter_name, 'wp_make_link_relative');
+ 	}
+}
+
+/**
+ * Custom callback for outputting comments 
+ *
+ * @return void
+ * @author Keir Whitaker
+ */
+function starkers_comment( $comment, $args, $depth ) {
+	$GLOBALS['comment'] = $comment; 
+	?>
+	<?php if ( $comment->comment_approved == '1' ): ?>	
+	<li>
+		<article id="comment-<?php comment_ID() ?>">
+			<?php echo get_avatar( $comment ); ?>
+			<h4><?php comment_author_link() ?></h4>
+			<time><a href="#comment-<?php comment_ID() ?>" pubdate><?php comment_date() ?> at <?php comment_time() ?></a></time>
+			<?php comment_text() ?>
+		</article>
+	<?php endif; ?>
+	</li>
+	<?php 
+}
 
