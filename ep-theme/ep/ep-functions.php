@@ -3,6 +3,14 @@
 /**
  * Misc useful functions go here
  */
+ 
+/**
+ * Remove the inlince css coments style thingie
+ */
+function ep_remove_recent_comments_css() {
+	add_filter("show_recent_comments_widget_style", "__return_false");
+}
+
 
 /**
  * EarthPeople debug

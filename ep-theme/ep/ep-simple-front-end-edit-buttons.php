@@ -104,6 +104,8 @@ function sfeeb_init() {
 
 // add css
 function sfeeb_wp_head() {
+	if (current_user_can("edit_post")) {
+	ob_start();
 	?>
 	<style type="text/css">
 		/* Styles for plugin <?php echo SFEEB_NAME ?> */
@@ -142,7 +144,13 @@ function sfeeb_wp_head() {
 		}
 	</style>
 	<?php
+	// Kompakta lite och skriv ut
+	$out = ob_get_clean();
+	$out = preg_replace('![\n\r\t]+!', ' ', $out);
+	echo $out;
+	}
 }
+
 
 // add scripts, but only for admins
 function sfeeb_wp_footer() {
@@ -151,10 +159,11 @@ function sfeeb_wp_footer() {
 		return;
 	}
 
+	ob_start();
 	?>
 	
 	<script type="text/javascript">
-		/* Script for plugin <?php echo SFEEB_NAME ?> */
+		/* Script for <?php echo SFEEB_NAME ?> */
 		jQuery(".sfeeb_edit_add").live("click", function(event) {
 		
 			// find the id of our post
@@ -276,7 +285,7 @@ function sfeeb_parse_request_edit_prio($args = null) {
 	}
 
 	// visa/kör bara kod om man är inloggad och är inloggad som "par"
-	global $current_user; get_currentuserinfo();
+	global $current_user, $wpdb; get_currentuserinfo();
 
 	if (
 		isset($args->query_vars["sfeeb_change_menu_order_direction"]) 
@@ -287,9 +296,12 @@ function sfeeb_parse_request_edit_prio($args = null) {
 		// fetch all info we need from $_GET-params
 		$post_to_update_id = (int) $args->query_vars["sfeeb_change_menu_order_post_id"];
 		$direction = $args->query_vars["sfeeb_change_menu_order_direction"];
-		$post_to_update = get_post($post_to_update_id);
+		$post_node = $post_to_update = get_post($post_to_update_id);
 		$url_return = $args->query_vars["sfeeb_change_menu_order_current_url"];
 
+		$post_node = get_post($post_to_update_id);
+		
+		// Måste leta upp $post_ref_node, som är ned efter om det är ner, den före om upp
 		// get all posts with the same parent as our article
 		$args = array(
 			"post_type" => $post_to_update->post_type,
@@ -299,134 +311,92 @@ function sfeeb_parse_request_edit_prio($args = null) {
 			"post_status" => "any",
 			"numberposts" => -1
 		);
+		$posts_any_status = get_posts($args);
+	
+		// Vanligt problem är att på nya sajter så har alla sidor samma order. Måste vara olika för annars blir det knas
+		// Lösning: loopa igenom alla och indexera om?
+		// Måste även loopa igenom de som inte är publicerade, för man blir lite förvirrad om dom inte ändrar order...
+		$menu_order = 0;
+		foreach ($posts_any_status as $one_post) {
+			$post_to_save = array(
+				"ID" => $one_post->ID,
+				"menu_order" => $menu_order++
+			);
+			wp_update_post( $post_to_save );
+		}
+
+		$args = array(
+			"post_type" => $post_to_update->post_type,
+			"orderby" => "menu_order",
+			"order" => "ASC",
+			"post_parent" => $post_to_update->post_parent,
+			"post_status" => "public",
+			"numberposts" => -1
+		);
 		$posts = get_posts($args);
 		
-		if ($direction == "down") {
-
-			// let's move the article down		
-			// update menu order of all pages
-			/*
-			
-			1 Page A
-			2 Page B
-			5 Page C <- flytta
-			7 Page D <- menu_order inte alltid vårt menu_order +1, kan "glappa" liksom
-			8 Page E
-			9 Page F
-			
-			Ta reda på aktuellt menu_order
-			Ta reda på efterföljande posts menu_order
-			Byt plats på menu_order på vald artikel + efterföljande artikel
-			
-			*/
-			
-			// loop until we find our post
-			$did_find_post = false;
-			foreach ($posts as $one_post) {
-				if ($one_post->ID == $post_to_update->ID) {
-					$did_find_post = true;
-					break;
-				}
+		$found_index = FALSE;
+		foreach ($posts as $index => $postobj) {
+			if ($postobj->ID === $post_to_update->ID) {
+				$found_index = $index;
+				break;
 			}
-			
-			if ($did_find_post) {
-				// cool, we found our post
-				// but do we have a next post too?
-				$post_next = current($posts); // not next() as I thought first
-				if ($post_next) {
-					// yep, got the next one
-					
-					// there can be situations where both posts have the same menu_order
-					// it that case, increase the menu_order of all posts above and including our next post
-					// and then do the swap
-					// clean_post_cache( $id ) ?
-					if ($post_to_update->menu_order == $post_next->menu_order) {
-						// echo "<p>Both posts have the same menu_order. Updating menu_order for all posts that are after post_next...</p>";
-						
-						// first update menu_order of the next post
-						$post_next->menu_order++;
-						wp_update_post(array(
-							"ID" => $post_next->ID,
-							"menu_order" => $post_next->menu_order
-						));
+		}
+		if ($found_index === FALSE) die("Could not change post order.");
+		
+		if ( "up" == $direction ) {
+			$post_ref_node = get_post( $posts[$found_index-1] );
+		} elseif ( "down" == $direction ) {
+			$post_ref_node = get_post( $posts[$found_index+1] );
+		}
 
-						// and then loop through the rest of the posts in $posts
-						$one_post = null;
-						while ($one_post = next($posts)) {
-							wp_update_post(array(
-								"ID" => $one_post->ID,
-								"menu_order" => $one_post->menu_order + 1
-							));
-						}
-					}
-					
-					// now swap the order of our posts
-					wp_update_post(array(
-						"ID" => $post_to_update->ID,
-						"menu_order" => $post_next->menu_order
-					));
-					wp_update_post(array(
-						"ID" => $post_next->ID,
-						"menu_order" => $post_to_update->menu_order
-					));
-					
-				}
-			}
+		if ( "up" == $direction ) {
+		
+			// post_node is placed before ref_post_node
+			// update menu_order of all pages with a menu order more than or equal ref_node_post and with the same parent as ref_node_post
+			// we do this so there will be room for our page if it's the first page
+			// so: no move of individial posts yet
+			$wpdb->query( $wpdb->prepare( "UPDATE $wpdb->posts SET menu_order = menu_order+1 WHERE post_parent = %d", $post_ref_node->post_parent ) );
 
-			// echo "move down";
+			// update menu order with +1 for all pages below ref_node, this should fix the problem with "unmovable" pages because of
+			// multiple pages with the same menu order (...which is not the fault of this plugin!)
+			$wpdb->query( $wpdb->prepare( "UPDATE $wpdb->posts SET menu_order = menu_order+1 WHERE menu_order >= %d", $post_ref_node->menu_order+1) );
 			
-		} elseif ($direction == "up") {
+			$post_to_save = array(
+				"ID" => $post_node->ID,
+				"menu_order" => $post_ref_node->menu_order,
+				"post_parent" => $post_ref_node->post_parent
+			);
+			wp_update_post( $post_to_save );
 
-			// echo "move up";
+			//echo "did before";
+
+		} elseif ( "down" == $direction ) {
+		
+			// post_node is placed after ref_post_node
 			
-			/*
-			Move article up
+			// update menu_order of all posts with the same parent ref_post_node and with a menu_order of the same as ref_post_node, but do not include ref_post_node
+			// +2 since multiple can have same menu order and we want our moved post to have a unique "spot"
+			$wpdb->query( $wpdb->prepare( "UPDATE $wpdb->posts SET menu_order = menu_order+2 WHERE post_parent = %d AND menu_order >= %d AND id <> %d ", $post_ref_node->post_parent, $post_ref_node->menu_order, $post_ref_node->ID ) );
+
+			// update menu_order of post_node to the same that ref_post_node_had+1
+			#$wpdb->query( $wpdb->prepare( "UPDATE $wpdb->posts SET menu_order = %d, post_parent = %d WHERE ID = %d", $post_ref_node->menu_order+1, $post_ref_node->post_parent, $post_node->ID ) );
+
+			$post_to_save = array(
+				"ID" => $post_node->ID,
+				"menu_order" => $post_ref_node->menu_order+1,
+				"post_parent" => $post_ref_node->post_parent
+			);
+			wp_update_post( $post_to_save );
 			
-			0 Page A
-			1 Page B 
-			2 Page C
+			//echo "did after";
 			
-			2 Page B
-			5 Page B <- kan ha samma menu_order..
-			5 Page C <- menu_order inte alltid vårt menu_order -1, kan "glappa"
-			7 Page D <- flytta
-			8 Page E
-			9 Page F
-			
-			Ta reda på aktuellt menu_order
-			Ta reda på föregående posts menu_order
-			Byt plats på menu_order på vald artikel + föregående artikel
-			
-			*/
-			
-			// find our post and also find the previous post
-			$prev_post = null;
-			$found_post = false;
-			foreach ($posts as $one_post) {
-				if ($one_post->ID == $post_to_update->ID) {
-					$found_post = true;
-					break;
-				}
-				$prev_post = $one_post;
-			}
-			
-			if ($found_post && $prev_post) {
-				// swap the order of our posts
-				wp_update_post(array(
-					"ID" => $post_to_update->ID,
-					"menu_order" => $prev_post->menu_order
-				));
-				wp_update_post(array(
-					"ID" => $prev_post->ID,
-					"menu_order" => $post_to_update->menu_order
-				));
-			} else {
-				// nah, don't do it!
-			}
-		} // if direction
+		}
+
+
+
 
 		// redirect back
-		#echo "<p>return to: $url_return</p>";
 		wp_redirect($url_return);
 		exit;
 

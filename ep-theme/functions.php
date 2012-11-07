@@ -11,14 +11,94 @@ class EP {
 		add_action('wp_enqueue_scripts', array($this, 'enqueue_styles_and_scripts') );
 		add_action('wp_get_attachment_image_attributes', 'remove_attachment_title_attr');
 		add_filter( 'body_class', "add_slug_to_body_class" );
+		add_action("widgets_init", "ep_remove_recent_comments_css");
 		remove_filter("wp_head", "wp_generator");
+		global $sitepress; if (isset($sitepress) && is_object($sitepress)) remove_filter("wp_head", array($sitepress, "meta_generator_tag"));
+		add_filter('wp_title', array($this, "add_tagline_to_title"), 10, 3);
+		add_action("wp_head", array($this, "add_open_graph_tags"));
+
+		// Set a custom order for the menu, for example pages above posts
+		add_filter('custom_menu_order', '__return_true');
+		add_filter('menu_order', array($this, "set_menu_order"));
 
 		// Add menus, post types, and similar
 		add_filter("init", array($this, "add_menus"));
 		add_filter("init", array($this, "add_post_types"));
 
 	}
+
+	/**
+	 * Add open graph tags to the head + regular meta description
+	 * Some resources:
+	 * http://yoast.com/facebook-open-graph-protocol/
+	 * http://ogp.me
+	 */
+	function add_open_graph_tags() {
+		global $post;
+		setup_postdata($post);
+		?>
+		<meta property="og:title" content="<?php the_title() ?>">
+		<meta property="og:site_name" content="<?php bloginfo('name') ?>">
+		<?php $excerpt = get_the_excerpt(); if ($excerpt) { ?>
+		<meta property="og:description" content="<?php echo esc_attr($excerpt); ?>">
+		<meta name="description" content="<?php echo esc_attr($excerpt) ?>">
+		<?php } ?>
+		<meta property="og:url" content="<?php echo home_url(get_permalink()) ?>"/>	
+		<meta property="og:type" content="<?php
+		if (is_single() || is_page()) {
+			echo "article";
+		} else {
+			echo "website";
+		}
+		?>">
+		<?php
+		// find and output image
+		$image = FALSE;
+		if (has_post_thumbnail()) {
+			$image = wp_get_attachment_image_src( get_post_thumbnail_id(), "medium");
+			$image = $image[0];
+		} else {
+			// no post thumbnail, so check simple fields
+			$image = simple_fields_value("image");
+		}
+		if ($image) { ?>
+		<meta property="og:image" content="<?php echo home_url($image) ?>">
+		<?php
+		}
+	}
 	
+	/**
+	 * Add tagline to title if we are of front page or home
+	 */
+	function add_tagline_to_title($title, $sep, $seplocation) {
+		
+		$title .= get_bloginfo( 'name' );
+
+		$site_description = get_bloginfo( 'description', 'display' );
+		if ( $site_description && ( is_home() || is_front_page() ) ) {
+			$title = "$title $sep $site_description";
+		}
+		
+		return $title;
+	}
+
+	/**
+	 * Change the order of the menu. Perhaps we don't want posts to be so damn high up.
+	 * http://codex.wordpress.org/Plugin_API/Filter_Reference/menu_order
+	 */
+	function set_menu_order($menu_order) {
+		$menu_order = array(
+			"index.php",
+			"separator1",
+			"edit.php?post_type=candidates",
+			"edit.php?post_type=jobs",
+			"edit.php?post_type=page",
+			// pages not added here will be added last automatically
+		);
+		return $menu_order;
+	}
+
+
 	/**
 	 * Load jquery from CDN with local fallback
 	 * http://beneverard.co.uk/blog/wordpress-loading-jquery-correctly-version-2/
