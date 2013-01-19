@@ -6,7 +6,7 @@ class EP {
 
 		// General setup and cleanup and make things work the way i want and like
 		$this->load_functions();
-		add_filter("init", "relativize_links" );
+		add_filter("admin_init", "relativize_links" );
 		add_action('template_redirect', array($this, 'setup_jquery'));
 		add_action('wp_enqueue_scripts', array($this, 'enqueue_styles_and_scripts') );
 		add_action('wp_get_attachment_image_attributes', 'remove_attachment_title_attr');
