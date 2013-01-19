@@ -3,6 +3,56 @@
 /**
  * Misc useful functions go here
  */
+
+
+/**
+ * Does something with a post, using a callback
+ * Setups global post variable before running callback
+ * And restores it afterwards
+ *
+ * Example
+ * <code>
+ * with_post( get_queried_object(), function() {
+ *      						
+ *      printf('<h1>%1$s</h1>', get_the_title());
+ *      
+ *  } );
+ * </code>
+ *
+ * @author Pär Thernstrom <https://twitter.com/eskapism>
+ * @param ID or WP POST object
+ * @param $do callable Function to run
+ * @return Mixed Returns the return value of the $do function
+ */
+function with_post($post_thing, $do) {
+	
+	// If post_thing is numeric then get the post with that id
+	if ( is_numeric( $post_thing ) ) {
+		$post_thing = get_post( $post_thing );
+	}
+
+	if ( ! is_object( $post_thing) ) return FALSE;
+	if ( ! get_class( $post_thing ) === "WP_Post" ) return FALSE;
+	if ( ! is_callable( $do ) ) return FALSE;
+
+	// Setup post
+	global $post;
+	$prev_post = $post;
+	$post = $post_thing;
+	setup_postdata( $post );
+
+	// Run callback
+	$callback_return = call_user_func_array( $do, array() );
+
+	// Restore post
+	$post = $prev_post;
+	setup_postdata( $post );
+
+	// Return what the callback returns, so we can check things in the template based on the callback
+	return $callback_return;
+
+}
+
  
 /**
  * Remove the inlince css coments style thingie
