@@ -12,6 +12,12 @@ body { background:#fff; }
 ::-moz-selection { background:#ff0; color:#333; }
 ::selection { background:#ff0; color:#333; }
 
+/* http://nicolasgallagher.com/micro-clearfix-hack/ */
+.cf:before, .cf:after { content:""; display:table; }
+.cf:after { clear:both; }
+.cf { zoom:1; } /* For IE 6/7 (trigger hasLayout) */
+
+
 body, input, textarea {
 	
 }
