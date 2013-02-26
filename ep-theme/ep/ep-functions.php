@@ -6,52 +6,238 @@
 
 
 /**
- * Does something with a post, using a callback
+ * WordPress WP_QUERY-wrapper to simplify getting and working with posts
+ *
+ * Does something with posts, using a callback
  * Setups global post variable before running callback
  * And restores it afterwards
- *
- * Example
- * <code>
- * with_post( get_queried_object(), function() {
- *      						
- *      printf('<h1>%1$s</h1>', get_the_title());
- *      
- *  } );
- * </code>
+  *
+ * Examples:
+ * https://gist.github.com/bonny/5005579
  *
  * @author Pär Thernstrom <https://twitter.com/eskapism>
- * @param ID or WP POST object
- * @param $do callable Function to run
+ * @param ID, array, string, WP POST, WP_QUERY
+ * @param $do callable Function to run for each matching post
+ * @param bool $buffer_and_return_output True if output should be buffered and returned
  * @return Mixed Returns the return value of the $do function
  */
-function with_post($post_thing, $do) {
+function with_posts($post_thing, $do, $buffer_and_return_output = FALSE) {
 	
-	// If post_thing is numeric then get the post with that id
-	if ( is_numeric( $post_thing ) ) {
-		$post_thing = get_post( $post_thing );
-	}
-
-	if ( ! is_object( $post_thing) ) return FALSE;
-	if ( ! get_class( $post_thing ) === "WP_Post" ) return FALSE;
 	if ( ! is_callable( $do ) ) return FALSE;
 
-	// Setup post
-	global $post;
-	$prev_post = $post;
-	$post = $post_thing;
-	setup_postdata( $post );
+	// Set defaults
+	$wp_query_args = array(
+		"post_status" => "publish",
+		"posts_per_page" => -1,
+		"orderby" => "date",
+		"order" => "DESC",
+	);
 
-	// Run callback
-	$callback_return = call_user_func_array( $do, array() );
+	// Get all public custom post types and add to query args
+	$get_post_types_args = array(
+		"public" => TRUE
+	);
+	$post_types = get_post_types( $get_post_types_args, $output = 'names');
+	$wp_query_args["post_type"] = array_keys($post_types);
 
-	// Restore post
-	$post = $prev_post;
-	setup_postdata( $post );
+	$posts_query = NULL;
+	$callback_return = NULL;
+	$buffered_output = NULL;
+	$found_valid_post_thing = FALSE;
+	
+	if ( is_numeric( $post_thing ) ) {
+		
+		// If post_thing is numeric then get the post with that id
+		$wp_query_args["post__in"] = array( (int) $post_thing);
+		
+		$found_valid_post_thing = TRUE;
 
-	// Return what the callback returns, so we can check things in the template based on the callback
-	return $callback_return;
+	} elseif ( is_string( $post_thing ) ) {
+	
+		// If post_thing is a string, 
+		// check if it's a wp_query compatible string with args, 
+		// or simply a comma separated list of ids. 
+		// or none of that.
+		// compatible format is like: 'post_type=regions&posts_per_page=3&orderby=title&order=asc
+
+		parse_str($post_thing, $arr_parsed_thing);
+		
+		if ( is_null( $arr_parsed_thing ) || ! is_array( $arr_parsed_thing ) ) {
+			// Something went bananas
+			break;
+		}
+
+		// If size is just one, and key contains commas, and value is empty, 
+		// then this looks like a comma separated list of id's
+		// or it could be a non-integer string = get post by path/slug/post_name
+		if ( sizeof( $arr_parsed_thing ) === 1 ) {
+			
+			reset($arr_parsed_thing);
+			$first_key = key($arr_parsed_thing);
+			if ( $arr_parsed_thing[ $first_key ] === "" && strpos( $first_key , ",") !== FALSE ) {
+		
+				// If post_thing is a comma separated string then get the posts, in the order they are in the string
+
+				// First check for numeric
+				$arr_post_vals = explode(",", $first_key);
+
+				/*
+				Example all strings
+				Array
+				(
+				    [0] => nickelodeon
+				    [1] => se
+				    [2] => fi
+				    [3] => punkd
+				)
+
+				Example all integers
+				Array
+				(
+				    [0] => 1
+				    [1] => 
+				    [2] => 2
+				    [3] => 3
+				    [4] => 5
+				    [5] => 993
+				)
+
+				*/
+				
+				// Remove empty vals from array
+				$arr_post_vals = array_filter($arr_post_vals);
+
+				// Check if array only is integers
+				$found_only_integers = TRUE;
+				foreach ($arr_post_vals as $one_val) {
+
+					if ( ! is_numeric($one_val) ) {
+						$found_only_integers = FALSE;
+						break;
+					}
+				}
+
+				$arr_post_ids = NULL;
+
+				// If not only integers, then assume post_slugs
+				// So quickly fetch the ids of matching pages
+				if ( FALSE === $found_only_integers ) {
+
+					// Match post things like:
+					// with_posts(",nickelodeon,se,fi,,punkd,,hepp,hopp,,"
+
+					global $wpdb;
+					$arr_sql_in = array();
+					foreach ( $arr_post_vals as $one_val ) {
+						$arr_sql_in[] = $wpdb->prepare("%s", $one_val);
+					}
+					
+					$sql_in = implode(",", $arr_sql_in);
+					$sql_in = "( $sql_in )";
+					$sql = "SELECT ID from $wpdb->posts WHERE post_name IN $sql_in";
+					$results = $wpdb->get_results( $sql, "OBJECT_K" );
+					$arr_post_ids = array_keys( $results );
+
+				} else {
+					
+					// Matched post thing like
+					// with_posts("1,,2,3,5,993,5634,"
+					$arr_post_ids = $arr_post_vals;
+					
+				}
+
+				$wp_query_args["post__in"] = $arr_post_ids;
+				$wp_query_args["orderby"] = "post__in";
+
+				$found_valid_post_thing = TRUE;
+
+			} else if ( $arr_parsed_thing[ $first_key ] === "" ) {
+
+				// get post by slug. 
+				// Could we use get_page_by_path here for some reason? Would that improve anything?
+				$wp_query_args["name"] = $first_key;
+			}
+
+		}
+
+		// If still not found valid thing, it wasn't a comma separated list
+		// So let's go with wp_query_args instead
+		if ( ! $found_valid_post_thing ) {
+
+			$wp_query_args = wp_parse_args($arr_parsed_thing , $wp_query_args);
+
+			$found_valid_post_thing = TRUE;
+
+		}
+
+	} elseif ( is_object( $post_thing) && get_class( $post_thing ) === "WP_Post" ) {
+
+		// If post_thing is a WP_Post-object, like the one you get when using get_post()
+		$wp_query_args["post__in"] = array( (int) $post_thing->ID );
+
+		$found_valid_post_thing = TRUE;
+
+	} elseif ( is_object( $post_thing ) && get_class( $post_thing ) === "WP_Query" ) {
+
+		// If post_thing is wp_query object
+		// Then just use it
+		$posts_query = $post_thing;
+
+		$found_valid_post_thing = TRUE;
+
+	}
+
+	// We're getting called with something we don't support
+	if (FALSE === $found_valid_post_thing) {
+
+		_doing_it_wrong( __FUNCTION__, 'You passed something to me that I don\'t understand', '3.5' );
+		return FALSE;
+
+	}
+
+	if ($buffer_and_return_output === TRUE) {
+		ob_start();
+	}
+
+	if ( is_null( $posts_query ) ) $posts_query = new wp_query($wp_query_args);
+	if ( $posts_query->have_posts() ) {
+
+		$arr_return_to_callback = array(
+			"post_count" => NULL,
+			"current_post" => NULL,
+			"post" => NULL,
+			"wp_query" => $posts_query,
+		);
+
+		while( $posts_query->have_posts() ) :
+
+			$posts_query->the_post();
+
+			$arr_return_to_callback["post_count"] = $posts_query->post_count;
+			$arr_return_to_callback["current_post"] = $posts_query->current_post;
+			$arr_return_to_callback["post"] = $posts_query->post;
+
+			// Run callback, for each post
+			// Also include some nice and useful stuff
+			// the current post is the first argument, then an array with all other info
+			$callback_return = call_user_func( $do, $arr_return_to_callback["post"], $arr_return_to_callback);
+
+		endwhile;
+
+	}
+
+	wp_reset_postdata();
+
+	if ($buffer_and_return_output === TRUE) {
+		$buffered_output = ob_get_clean();
+		$posts_query->buffered_output = $buffered_output;
+	}
+
+	// Return the posts_query we used
+	return $posts_query;
 
 }
+
 
  
 /**
@@ -453,14 +639,15 @@ function ep_get_teaser_and_body($post_id = NULL) {
 // Code from plugin "Breadcrumb Titles For Pages"
 // Modified by Pär Thernström
 function page_breadcrumb_wptitle( $title, $sep, $seplocation = null ) {
+	
 	global $wp_query;
-
-	// Posts don't have parents
-	if ( !is_page() )
-		return $title;
 
 	$post = $wp_query->get_queried_object();
 
+	// Check that the things we need do exist
+	if ( empty($post) || ! isset($post->post_type) || ! is_post_type_hierarchical( $post->post_type ) )
+		return $title;
+	
 	// If this is a top level Page, then there's nothing to modify
 	if ( 0 == $post->post_parent )
 		return $title;
@@ -782,3 +969,24 @@ function starkers_comment( $comment, $args, $depth ) {
 	<?php 
 }
 
+// Add css classes "current_page_item", "current_page_item" and "current_page_parent" to custom post types
+// They are only added to regular pages by default
+// As found here:
+// http://kucrut.org/wp_list_pages-for-custom-post-types/
+function ep_add_page_css_classes_to_custom_post_types( $css_class, $page, $depth, $args ) {
+
+	if ( empty($args['post_type']) || !is_singular($args['post_type']) )
+		return $css_class;
+
+	$_current_page = get_queried_object();
+
+	if ( in_array( $page->ID, $_current_page->ancestors ) )
+		$css_class[] = 'current_page_ancestor';
+	if ( $page->ID == $_current_page->ID )
+		$css_class[] = 'current_page_item';
+	elseif ( $_current_page && $page->ID == $_current_page->post_parent )
+		$css_class[] = 'current_page_parent';
+
+	return $css_class;
+
+}
