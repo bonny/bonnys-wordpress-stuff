@@ -104,7 +104,11 @@ function sfeeb_init() {
 
 // add css
 function sfeeb_wp_head() {
-	if (current_user_can("edit_post")) {
+
+	global $post;
+	if ( is_null($post) ) return;
+
+	if (current_user_can("edit_post", get_the_id())) {
 	ob_start();
 	?>
 	<style type="text/css">
