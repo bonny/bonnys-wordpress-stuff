@@ -16,6 +16,7 @@ class EP {
 		global $sitepress; if (isset($sitepress) && is_object($sitepress)) remove_filter("wp_head", array($sitepress, "meta_generator_tag"));
 		add_filter('wp_title', array($this, "add_tagline_to_title"), 10, 3);
 		add_action("wp_head", array($this, "add_open_graph_tags"));
+		add_action("admin_init", array($this, "cleanup_dashboard"));
 
 		// Set a custom order for the menu, for example pages above posts
 		add_filter('custom_menu_order', '__return_true');
@@ -28,13 +29,41 @@ class EP {
 	}
 
 	/**
+	 * Shortcut for __(). Works like __(), but adds local text domain.
+	 * @param $str string Text
+	 */
+	function __($str) {
+		return __($str, $this->text_domain);
+	}
+
+	/**
+	 * Cleanup dashboard by removing dashboards meta boxes
+	 */
+	function cleanup_dashboard() {
+
+		#remove_meta_box('dashboard_quick_press', 'dashboard', 'normal');  // quick press
+		#remove_meta_box('dashboard_recent_drafts', 'dashboard', 'normal');  // recent drafts
+
+		remove_meta_box('dashboard_right_now', 'dashboard', 'normal');
+		remove_meta_box('dashboard_recent_comments', 'dashboard', 'normal');
+		remove_meta_box('dashboard_incoming_links', 'dashboard', 'normal');
+		remove_meta_box('dashboard_plugins', 'dashboard', 'normal');
+		remove_meta_box('dashboard_primary', 'dashboard', 'normal');
+		remove_meta_box('dashboard_secondary', 'dashboard', 'normal');
+
+	}
+
+	/**
 	 * Add open graph tags to the head + regular meta description
 	 * Some resources:
 	 * http://yoast.com/facebook-open-graph-protocol/
 	 * http://ogp.me
 	 */
 	function add_open_graph_tags() {
+
 		global $post;
+		if (is_null($post)) return;
+
 		setup_postdata($post);
 		?>
 		<meta property="og:title" content="<?php the_title() ?>">
