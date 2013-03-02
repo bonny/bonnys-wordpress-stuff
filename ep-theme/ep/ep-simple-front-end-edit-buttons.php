@@ -6,7 +6,7 @@
 
 // Simple Front End Edit Buttons = SFEEB
 define( "SFEEB_VERSION", "0.3");
-define( "SFEEB_URL", wp_make_link_relative(get_template_directory_uri() . "/ep"));
+define( "SFEEB_URL", wp_make_link_relative(get_stylesheet_directory_uri() . "/ep"));
 define( "SFEEB_NAME", "EP Simple Front End Edit Buttons");
 
 /**
@@ -59,20 +59,22 @@ function sfeeb_widgets_admin_page() {
 	}
 }
 
-function sfeeb_dynamic_sidebar_params($info) {
+function sfeeb_dynamic_sidebar_params($info = null) {
 	
 	if (!is_admin()) {
 	
 		// can disable by adding filter sfeeb_show_widget_edit with return false
-		$show_edit = apply_filters("sfeeb_show_widget_edit", TRUE);
-		
+		$show_edit = apply_filters("sfeeb_show_widget_edit", TRUE);	
+
 		foreach ($info as & $one) {
-			
+	
+			if ( ! isset( $one["widget_id"] ) ) continue;
+
 			$one["before_widget"] .= sprintf('
 				<div class="ep_edit_widget"><a href="%2$s"><img src="%3$s" title="Edit widget %1$s"></a></div>
 				',
 				esc_attr($one["widget_name"]),
-				home_url("/wp-admin/widgets.php?ep_edit_widget=1&amp;ep_edit_widget_id=" . $one["widget_id"]),
+				admin_url("/wp-admin/widgets.php?ep_edit_widget=1&amp;ep_edit_widget_id=" . $one["widget_id"]),
 				SFEEB_URL . "/edit.png"
 			);
 
@@ -98,7 +100,8 @@ function sfeeb_get_pages($pages, $arg2) {
 
 
 function sfeeb_init() {
-	wp_enqueue_script("jquery");	
+	wp_enqueue_script("jquery");
+	wp_enqueue_script("jquery-effects-highlight");
 }
 
 
@@ -146,6 +149,10 @@ function sfeeb_wp_head() {
 			right: 5px;
 			opacity: .5;
 		}
+
+		.widget {
+			position: relative;
+		}
 	</style>
 	<?php
 	// Kompakta lite och skriv ut
@@ -168,7 +175,7 @@ function sfeeb_wp_footer() {
 	
 	<script type="text/javascript">
 		/* Script for <?php echo SFEEB_NAME ?> */
-		jQuery(".sfeeb_edit_add").live("click", function(event) {
+		jQuery(document).on("click", ".sfeeb_edit_add", function(event) {
 		
 			// find the id of our post
 			// sfeeb_edit sfeeb_edit_add sfeeb_edit_add_post_id_9
