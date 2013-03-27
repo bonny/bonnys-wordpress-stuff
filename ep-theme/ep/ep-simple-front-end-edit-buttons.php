@@ -61,14 +61,14 @@ function sfeeb_widgets_admin_page() {
 
 function sfeeb_dynamic_sidebar_params($info = null) {
 	
-	if (!is_admin()) {
+	if ( current_user_can("edit_theme_options") ) {
 	
 		// can disable by adding filter sfeeb_show_widget_edit with return false
 		$show_edit = apply_filters("sfeeb_show_widget_edit", TRUE);	
 
 		foreach ($info as & $one) {
 	
-			if ( ! isset( $one["widget_id"] ) ) continue;
+		if ( ! isset( $one["widget_id"] ) || ! $show_edit ) continue;
 
 			$one["before_widget"] .= sprintf('
 				<div class="ep_edit_widget"><a href="%2$s"><img src="%3$s" title="Edit widget %1$s"></a></div>
