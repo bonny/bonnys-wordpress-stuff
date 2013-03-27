@@ -17,6 +17,7 @@ class EP {
 		add_filter('wp_title', array($this, "add_tagline_to_title"), 10, 3);
 		add_action("wp_head", array($this, "add_open_graph_tags"));
 		add_action("admin_init", array($this, "cleanup_dashboard"));
+		// add_action("admin_menu", array($this, "cleanup_menu"));
 
 		// Set a custom order for the menu, for example pages above posts
 		add_filter('custom_menu_order', '__return_true');
@@ -25,6 +26,9 @@ class EP {
 		// Add menus, post types, and similar
 		add_filter("init", array($this, "add_menus"));
 		add_filter("init", array($this, "add_post_types"));
+
+		// Add debug info
+		add_filter( 'template_include', array($this, 'var_template_include'), 1000 );
 
 	}
 
@@ -50,6 +54,18 @@ class EP {
 		remove_meta_box('dashboard_plugins', 'dashboard', 'normal');
 		remove_meta_box('dashboard_primary', 'dashboard', 'normal');
 		remove_meta_box('dashboard_secondary', 'dashboard', 'normal');
+
+	}
+
+	/**
+	 * Cleanup menu by reoving posts and comments for example
+	 */
+	function cleanup_menu() {
+
+		// Remove (blog) posts menu
+		remove_menu_page("edit.php");
+		// Remove comments menu
+		remove_menu_page("edit-comments.php");
 
 	}
 
@@ -88,7 +104,7 @@ class EP {
 			$image = $image[0];
 		} else {
 			// no post thumbnail, so check simple fields
-			$image = simple_fields_value("image");
+			// $image = simple_fields_value("image");
 		}
 		if ($image) { ?>
 		<meta property="og:image" content="<?php echo home_url($image) ?>">
@@ -186,6 +202,22 @@ class EP {
 		));
 		*/
 
+	}
+
+	// Code to get current template. Found here:
+	// http://wordpress.stackexchange.com/questions/10537/get-name-of-the-current-template-file
+	function var_template_include( $t ){
+	    $GLOBALS['current_theme_template'] = basename($t);
+	    return $t;
+	}
+
+	function get_current_template( $echo = false ) {
+	    if( !isset( $GLOBALS['current_theme_template'] ) )
+	        return false;
+	    if( $echo )
+	        echo $GLOBALS['current_theme_template'];
+	    else
+	        return $GLOBALS['current_theme_template'];
 	}
 
 }

@@ -185,6 +185,22 @@ function with_posts($post_thing, $do, $buffer_and_return_output = FALSE) {
 
 		$found_valid_post_thing = TRUE;
 
+	} elseif ( is_array( $post_thing ) && isset( $post_thing[0] ) && is_array( $post_thing[0] ) && isset($post_thing[0]["ID"]) && is_numeric($post_thing[0]["ID"]) ) {
+		
+		// Post thing is an array of post arrays, like we get from get_posts or wp_get_recent_posts
+		$arr_post_ids = array();
+		foreach ($post_thing as $one_post_thing) $arr_post_ids[] = $one_post_thing["ID"];
+		$wp_query_args["post__in"] = $arr_post_ids;
+		$found_valid_post_thing = TRUE;
+
+	} elseif( is_array( $post_thing ) && isset( $post_thing[0] ) && get_class( $post_thing[0] ) === "WP_Post" ) {
+
+		// Post thing is array of post objects
+		$arr_post_ids = array();
+		foreach ($post_thing as $one_post_thing) $arr_post_ids[] = $one_post_thing->ID;
+		$wp_query_args["post__in"] = $arr_post_ids;
+		$found_valid_post_thing = TRUE;
+
 	}
 
 	// We're getting called with something we don't support
@@ -988,5 +1004,34 @@ function ep_add_page_css_classes_to_custom_post_types( $css_class, $page, $depth
 		$css_class[] = 'current_page_parent';
 
 	return $css_class;
+
+}
+
+
+/**
+ * Returns the content with more tag activated, for global post of for $post if supplied
+ * @param string $read_more_string
+ * @param post | id $post_arg
+ */
+function ep_get_the_content_force_more($read_more_string = "", $post_arg = null) {
+	
+	global $post, $more;
+
+	$org_post = $post;
+	if ($post_arg) {
+		$post = get_post($post_arg);
+		setup_postdata( $post );
+	}
+
+	$org_more = $more;
+	$more = 0;
+	ob_start();
+	the_content($read_more_string);
+	$more = $org_more;
+
+	$post = $org_post;
+	setup_postdata($post);
+
+	return ob_get_clean();
 
 }
