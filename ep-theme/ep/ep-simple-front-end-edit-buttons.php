@@ -100,8 +100,12 @@ function sfeeb_get_pages($pages, $arg2) {
 
 
 function sfeeb_init() {
+
+	if ( ! is_admin() ) return;
+	
 	wp_enqueue_script("jquery");
 	wp_enqueue_script("jquery-effects-highlight");
+
 }
 
 

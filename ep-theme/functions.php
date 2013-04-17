@@ -19,6 +19,9 @@ class EP {
 		add_action("admin_init", array($this, "cleanup_dashboard"));
 		// add_action("admin_menu", array($this, "cleanup_menu"));
 
+		// Remove "Thank you for creating with WordPress"-text in bottom
+		add_filter("admin_footer_text", "__return_false");
+
 		// Set a custom order for the menu, for example pages above posts
 		add_filter('custom_menu_order', '__return_true');
 		add_filter('menu_order', array($this, "set_menu_order"));

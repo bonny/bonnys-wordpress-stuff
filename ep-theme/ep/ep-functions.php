@@ -45,6 +45,9 @@ function with_posts($post_thing, $do, $buffer_and_return_output = FALSE) {
 	$buffered_output = NULL;
 	$found_valid_post_thing = FALSE;
 	
+	global $post;
+	$original_post_global = $post;
+
 	if ( is_numeric( $post_thing ) ) {
 		
 		// If post_thing is numeric then get the post with that id
@@ -242,7 +245,13 @@ function with_posts($post_thing, $do, $buffer_and_return_output = FALSE) {
 
 	}
 
-	wp_reset_postdata();
+	// Should this be called or not?
+	// If we have set global post to something else in the loop, then this destroys that,
+	// meaning we can have different post before calling with_posts and after...
+	// wp_reset_postdata();
+	// setup postdata for original global post, instead of the one in the global query (that may have been overwritten)
+	$post = $original_post_global;
+	setup_postdata($original_post_global);
 
 	if ($buffer_and_return_output === TRUE) {
 		$buffered_output = ob_get_clean();
