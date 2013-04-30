@@ -10,7 +10,7 @@ class EP {
 		add_action('template_redirect', array($this, 'setup_jquery'));
 		add_action('wp_enqueue_scripts', array($this, 'enqueue_styles_and_scripts') );
 		add_action('wp_get_attachment_image_attributes', 'remove_attachment_title_attr');
-		add_filter( 'body_class', "add_slug_to_body_class" );
+		add_filter('body_class', "add_slug_to_body_class");
 		add_action("widgets_init", "ep_remove_recent_comments_css");
 		remove_filter("wp_head", "wp_generator");
 		global $sitepress; if (isset($sitepress) && is_object($sitepress)) remove_filter("wp_head", array($sitepress, "meta_generator_tag"));
@@ -18,6 +18,11 @@ class EP {
 		add_action("wp_head", array($this, "add_open_graph_tags"));
 		add_action("admin_init", array($this, "cleanup_dashboard"));
 		// add_action("admin_menu", array($this, "cleanup_menu"));
+
+		// Add classes to wp_list_pages that tell us if the page has childs/sub pages. makes it possible to style the parent
+		add_filter('page_css_class', array($this, 'add_page_css_has_children'), 10, 5);
+		add_action('save_post', array($this, 'delete_add_page_css_has_children_cache' ));
+		add_action('delete_post', array($this, 'delete_add_page_css_has_children_cache'));
 
 		// Remove "Thank you for creating with WordPress"-text in bottom
 		add_filter("admin_footer_text", "__return_false");
@@ -223,9 +228,33 @@ class EP {
 	        return $GLOBALS['current_theme_template'];
 	}
 
-}
-$ep = new EP();
-$ep->init();
+	// for wp list pages: add a class that tell us if the page has childs/sub pages. makes it possible to style the parent
+	// $css_class, $page, $depth, $args, $current_page
+	function add_page_css_has_children($css_class, $page, $depth, $args, $current_page) {
+
+		$cache_key = $page->ID;
+		$cache_group = "ep_add_page_css_has_children";
+		$children = wp_cache_get( $cache_key, $cache_group );
+
+		if ( false === $children ) {
+			$children = get_children("post_parent=$page->ID&post_type[]=page&post_type[]=company&post_status=publish");
+			wp_cache_set( $cache_key, $children);
+		}
+
+		if ( $children ) {
+			$css_class[] = "page_has_children";
+		}
+
+		return $css_class;
+	}
+
+	function delete_add_page_css_has_children_cache($post_id) {
+		wp_cache_delete( $post_id, "ep_add_page_css_has_children" );
+	}
 
 
+} // end class
+
+$GLOBALS["ep"] = new EP();
+$GLOBALS["ep"]->init();
 
