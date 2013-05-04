@@ -12,8 +12,11 @@ class EP {
 		add_action('wp_get_attachment_image_attributes', 'remove_attachment_title_attr');
 		add_filter('body_class', "add_slug_to_body_class");
 		add_action("widgets_init", "ep_remove_recent_comments_css");
-		remove_filter("wp_head", "wp_generator");
+
 		add_filter('wp_headers', array($this, 'remove_x_pingback'));
+		remove_filter("wp_head", "wp_generator");
+		remove_action('wp_head', 'rsd_link');
+		remove_action('wp_head', 'wlwmanifest_link');
 
 		global $sitepress; if (isset($sitepress) && is_object($sitepress)) remove_filter("wp_head", array($sitepress, "meta_generator_tag"));
 		add_filter('wp_title', array($this, "add_tagline_to_title"), 10, 3);
