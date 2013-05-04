@@ -55,7 +55,7 @@ function sfeeb_widgets_admin_page() {
 			});
 		});
 		</script>
-		<?
+		<?php
 	}
 }
 
