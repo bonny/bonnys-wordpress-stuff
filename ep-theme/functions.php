@@ -13,6 +13,8 @@ class EP {
 		add_filter('body_class', "add_slug_to_body_class");
 		add_action("widgets_init", "ep_remove_recent_comments_css");
 		remove_filter("wp_head", "wp_generator");
+		add_filter('wp_headers', array($this, 'remove_x_pingback'));
+
 		global $sitepress; if (isset($sitepress) && is_object($sitepress)) remove_filter("wp_head", array($sitepress, "meta_generator_tag"));
 		add_filter('wp_title', array($this, "add_tagline_to_title"), 10, 3);
 		add_action("wp_head", array($this, "add_open_graph_tags"));
@@ -38,6 +40,12 @@ class EP {
 		// Add debug info
 		add_filter( 'template_include', array($this, 'var_template_include'), 1000 );
 
+	}
+
+	// Remove x pingback from headers
+	function remove_x_pingback($headers) {
+	    unset($headers['X-Pingback']);
+	    return $headers;
 	}
 
 	/**
