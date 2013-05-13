@@ -186,9 +186,20 @@ class EP {
 
 	function enqueue_styles_and_scripts() {
 
-		wp_enqueue_style("style_screen", get_template_directory_uri() . '/style.css');
-		wp_enqueue_script("ep_scripts", get_template_directory_uri() . '/js/scripts.js', array("jquery"), 1, TRUE);
+		// find modification time of the latest js or css file, max one folder down
+		$files = array_merge( glob( plugin_dir_path( __FILE__ ) . "*.{css,js}", GLOB_BRACE ), glob( plugin_dir_path( __FILE__ ) . "*/*.{css,js}", GLOB_BRACE ) );
+		$files = array_combine($files, array_map("filemtime", $files));
+		arsort($files);		
+		$latest_file_time = $files[key($files)];
 		
+		// queue styles
+		wp_enqueue_style("style_screen", get_template_directory_uri() . '/style.css', null, $latest_file_time);
+
+		// queue scripts
+		wp_enqueue_script("ep_scripts", get_template_directory_uri() . '/js/scripts.js', null, $latest_file_time, TRUE);
+
+
+
 	}	
 
 
