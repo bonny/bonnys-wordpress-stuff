@@ -198,8 +198,6 @@ class EP {
 		// queue scripts
 		wp_enqueue_script("ep_scripts", get_template_directory_uri() . '/js/scripts.js', null, $latest_file_time, TRUE);
 
-
-
 	}	
 
 
