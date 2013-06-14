@@ -13,10 +13,17 @@ class EP {
 		add_filter('body_class', "add_slug_to_body_class");
 		add_action("widgets_init", "ep_remove_recent_comments_css");
 
+		// Remove lots of things in head
 		add_filter('wp_headers', array($this, 'remove_x_pingback'));
 		remove_filter("wp_head", "wp_generator");
 		remove_action('wp_head', 'rsd_link');
 		remove_action('wp_head', 'wlwmanifest_link');
+		remove_action( 'wp_head', 'feed_links_extra', 3 );
+		remove_action( 'wp_head', 'index_rel_link' ); // index link
+		remove_action( 'wp_head', 'parent_post_rel_link', 10, 0 ); // prev link
+		remove_action( 'wp_head', 'adjacent_posts_rel_link', 10, 0 );
+		remove_action( 'wp_head', 'adjacent_posts_rel_link_wp_head', 10, 0 );
+		remove_action('wp_head', 'rel_canonical');
 
 		global $sitepress; if (isset($sitepress) && is_object($sitepress)) remove_filter("wp_head", array($sitepress, "meta_generator_tag"));
 		add_filter('wp_title', array($this, "add_tagline_to_title"), 10, 3);
@@ -97,7 +104,9 @@ class EP {
 	function add_open_graph_tags() {
 
 		global $post;
+
 		if (is_null($post)) return;
+		if (post_password_required($post)) return;
 
 		setup_postdata($post);
 		?>
