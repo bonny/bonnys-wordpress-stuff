@@ -1,12 +1,6 @@
 <?php
 /**
- * The template used to display Tag Archive pages
- *
- * Please see /external/starkers-utilities.php for info on get_template_parts()
- *
- * @package 	WordPress
- * @subpackage 	Starkers
- * @since 		Starkers 4.0
+ * Template used to display Tag Archive pages
  */
 ?>
 <?php get_template_parts( array( 'parts/shared/html-header', 'parts/shared/header' ) ); ?>
