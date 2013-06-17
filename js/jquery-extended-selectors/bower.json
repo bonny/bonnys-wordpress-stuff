@@ -1,0 +1,9 @@
+{
+  "name": "jquery-extended-selectors",
+  "version": "0.0.0",
+  "commit": "48f169fd34834eb41a1061239f123af9ce71e249",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/keithclark/JQuery-Extended-Selectors.git"
+  }
+}

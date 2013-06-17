@@ -263,16 +263,6 @@ function with_posts($post_thing, $do, $buffer_and_return_output = FALSE) {
 
 }
 
-
- 
-/**
- * Remove the inlince css coments style thingie
- */
-function ep_remove_recent_comments_css() {
-	add_filter("show_recent_comments_widget_style", "__return_false");
-}
-
-
 /**
  * EarthPeople debug
  * För jag gillar att skriva ut variabler...
@@ -906,7 +896,7 @@ function get_page_id_from_path( $path ) {
  * @return 	array
  * @author 	Keir Whitaker
  */
-function add_slug_to_body_class( $classes ) {
+function add_page_slug_to_body_class( $classes ) {
 	global $post;
    
 	if( is_home() ) {			
