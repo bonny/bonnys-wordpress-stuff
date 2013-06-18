@@ -951,7 +951,7 @@ function relativize_links() {
 		"post_link", 
 		"post_type_link", 
 		"page_link", 
-		// "theme_root_uri", // when i have some problem enqueing styles when wp is in subdir
+		// "theme_root_uri", // had problem enqueing styles when wp is in subdir
 		"wp_get_attachment_url", 
 		"term_link", 
 		"tag_link", 

@@ -64,8 +64,13 @@ class EP {
 		remove_action('wp_head', 'rel_canonical');
 		add_filter("show_recent_comments_widget_style", "__return_false");
 
-		// Remove title from insterted attachmentents
+		// Remove title from inserted attachmentents
 		add_action('wp_get_attachment_image_attributes', 'remove_attachment_title_attr');
+
+		// Remove that incredibly stupid auto wordpress > WordPress "correct"
+		remove_filter( 'the_title', 'capital_P_dangit', 11 );
+		remove_filter( 'the_content', 'capital_P_dangit', 11 );
+		remove_filter( 'comment_text', 'capital_P_dangit', 31 );
 
 		// Remove WPML-generator tag
 		global $sitepress; if (isset($sitepress) && is_object($sitepress)) remove_filter("wp_head", array($sitepress, "meta_generator_tag"));
