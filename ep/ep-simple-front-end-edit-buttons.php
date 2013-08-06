@@ -68,7 +68,7 @@ function sfeeb_dynamic_sidebar_params($info = null) {
 
 		foreach ($info as & $one) {
 	
-		if ( ! isset( $one["widget_id"] ) || ! $show_edit ) continue;
+			if ( ! isset( $one["widget_id"] ) || ! $show_edit ) continue;
 
 			$one["before_widget"] .= sprintf('
 				<div class="ep_edit_widget"><a href="%2$s"><img src="%3$s" title="Edit widget %1$s"></a></div>
