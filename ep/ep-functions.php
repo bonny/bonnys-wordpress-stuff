@@ -251,7 +251,8 @@ function with_posts($post_thing, $do, $buffer_and_return_output = FALSE) {
 	// wp_reset_postdata();
 	// setup postdata for original global post, instead of the one in the global query (that may have been overwritten)
 	$post = $original_post_global;
-	setup_postdata($original_post_global);
+	if ( ! is_null($post) )
+		setup_postdata($post);
 
 	if ($buffer_and_return_output === TRUE) {
 		$buffered_output = ob_get_clean();
