@@ -33,8 +33,7 @@ function sfeeb_add_page(post_id) {
 			"post_type": "page"
 		};
 		
-		var ajaxurl = '<?php echo admin_url('admin-ajax.php'); ?>';
-		jQuery.post(ajaxurl, data, function(response) {
+		jQuery.post(window.ep.ajaxurl, data, function(response) {
 			//console.log(response);
 			if (response != "0") {
 				document.location = response;

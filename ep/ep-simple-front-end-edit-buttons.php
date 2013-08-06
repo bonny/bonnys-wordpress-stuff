@@ -26,6 +26,15 @@ add_filter("get_pages", "sfeeb_get_pages", 10, 2);
 add_action("dynamic_sidebar_params", "sfeeb_dynamic_sidebar_params");
 add_action("widgets_admin_page", "sfeeb_widgets_admin_page");
 
+function sfeeb_wp_head() {
+	?>
+	<script>
+		var ep = window.ep || {};
+		ep.ajaxurl = '<?php echo admin_url('admin-ajax.php'); ?>';
+	</script>
+	<?php
+}
+
 /**
  * Create widget for related stuff for blog posts
  */
