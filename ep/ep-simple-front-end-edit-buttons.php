@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Simple Front End Edit Buttons
  * Functions and stuff to enable support for small funky edit buttons for posts and widgets
@@ -7,12 +8,10 @@
 // Simple Front End Edit Buttons = SFEEB
 define( "SFEEB_VERSION", "0.3");
 define( "SFEEB_URL", wp_make_link_relative(get_stylesheet_directory_uri() . "/ep"));
+define( "SFEEB_ABS_URL", get_stylesheet_directory_uri() . "/ep");
 define( "SFEEB_NAME", "EP Simple Front End Edit Buttons");
 
-/**
- * Hello. Let's get started now, shall we?
- * Hook onto some stuff. Yeah. Let's do that.
- */
+// Add actions and filters
 add_action('query_vars', "sfeeb_query_vars_edit_prio");
 add_filter("parse_request", "sfeeb_parse_request_edit_prio");
 add_action('widget_pages_args', "sfeeb_widget_pages_args");
@@ -101,125 +100,25 @@ function sfeeb_get_pages($pages, $arg2) {
 
 function sfeeb_enqueue_scripts() {
 
-	if ( ! is_admin() ) return;
-	
-	wp_enqueue_script("jquery");
-	wp_enqueue_script("jquery-effects-highlight");
-
-}
-
-
-// add css
-function sfeeb_wp_head() {
-
 	global $post;
-	if ( is_null($post) ) return;
 
-	if (current_user_can("edit_post", get_the_id())) {
-	ob_start();
-	?>
-	<style type="text/css">
-		/* Styles for plugin <?php echo SFEEB_NAME ?> */
-		div.sfeeb_edit_wrap {
-			margin: 0;
-			padding: 0;
-			line-height: 1;
-			display: inline;
-		}
-		a.sfeeb_edit,
-		.ep_edit_widget {
-			opacity: .5;
-			-ms-filter: "alpha(opacity=50)";
-			margin-right: 1px;
-			margin-left: 1px;
-			display: inline !important;
-			padding: 0 !important;
-		}
-		a.sfeeb_edit:hover,
-		.ep_edit_widget:hover {
-			opacity: 1;
-			-ms-filter: "alpha(opacity=100)";
-		}
-		a.sfeeb_edit img,
-		.ep_edit_widget img
-		 {
-			width: 13px;
-			height: 13px;
-		}
-
-		.ep_edit_widget {
-			position: absolute;
-			top: 5px;
-			right: 5px;
-			opacity: .5;
-		}
-
-		.widget {
-			position: relative;
-		}
-	</style>
-	<?php
-	// Kompakta lite och skriv ut
-	$out = ob_get_clean();
-	$out = preg_replace('![\n\r\t]+!', ' ', $out);
-	echo $out;
-	}
-}
-
-
-// add scripts, but only for admins
-function sfeeb_wp_footer() {
-
-	if (!current_user_can("edit_pages")) {
-		return;
-	}
-
-	ob_start();
-	?>
-	
-	<script type="text/javascript">
-		/* Script for <?php echo SFEEB_NAME ?> */
-		jQuery(document).on("click", ".sfeeb_edit_add", function(event) {
+	if ( is_admin() ) {
 		
-			// find the id of our post
-			// sfeeb_edit sfeeb_edit_add sfeeb_edit_add_post_id_9
-			var t = jQuery(this);
-			var classes = t.attr("class");
-			var match = classes.match(/sfeeb_edit_add_post_id_([\d]+)/);
-			if (match.length == 2) {
-				var post_id = match[1];
-				sfeeb_add_page(post_id);
-			}
+		// scripts and styles for admin
+
+		wp_enqueue_script("jquery-effects-highlight");
+
+	} else {
 		
-			event.preventDefault();
-		});
-		function sfeeb_add_page(post_id) {
-			var page_title = prompt("Enter name of new page", "Untitled");
-			if (page_title) {
-				
-				var data = {
-					"action": 'sfeeb_add_page',
-					"pageID": post_id,
-					"type": "after",
-					"page_title": page_title,
-					"post_type": "page"
-				};
-				
-				var ajaxurl = '<?php echo admin_url('admin-ajax.php'); ?>';
-				jQuery.post(ajaxurl, data, function(response) {
-					//console.log(response);
-					if (response != "0") {
-						document.location = response;
-					}
-				});
-				return false;
-			
-			} else {
-				return false;
-			}
+		// scripts and styles for regular pages
+
+		// only add whe user can add pages (probably is logged and is admin)
+		if ( current_user_can("edit_pages") ) {
+			wp_enqueue_style( "sfeeb_styles", SFEEB_ABS_URL . "/ep.css", null, 1 );
+			wp_enqueue_script( "sfeeb_scripts", SFEEB_ABS_URL . "/ep.js", array("jquery"), 1, true);
 		}
-	</script>
-	<?php
+
+	}
 	
 }
 
