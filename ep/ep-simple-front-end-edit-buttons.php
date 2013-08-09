@@ -18,7 +18,7 @@ add_action('widget_pages_args', "sfeeb_widget_pages_args");
 add_action('wp_list_pages', "sfeeb_wp_list_pages");
 add_action('page_css_class', "sfeeb_page_css_class");
 add_action("wp_head", "sfeeb_wp_head");
-add_action("wp_footer", "sfeeb_wp_footer");
+// add_action("wp_footer", "sfeeb_wp_footer");
 add_action("wp_enqueue_scripts", "sfeeb_enqueue_scripts");
 add_filter("get_pages", "sfeeb_get_pages", 10, 2);
 
