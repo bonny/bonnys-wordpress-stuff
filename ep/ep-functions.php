@@ -204,7 +204,14 @@ function with_posts($post_thing, $do, $buffer_and_return_output = FALSE) {
 		$wp_query_args["post__in"] = $arr_post_ids;
 		$found_valid_post_thing = TRUE;
 
-	}
+	} elseif ( is_array( $post_thing ) ) {
+
+		// treat array as arguments to wp_query
+		// maybe todo: check for valid wp_query argument things (just check keys for example, at least one must be in the array)
+		$found_valid_post_thing = true;
+		$wp_query_args = array_merge( $wp_query_args, $post_thing );
+
+	} // end check type of post_thing
 
 	// We're getting called with something we don't support
 	if (FALSE === $found_valid_post_thing) {
