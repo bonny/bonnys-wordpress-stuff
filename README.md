@@ -21,3 +21,7 @@ define( 'WP_CONTENT_URL', "http://" . $_SERVER["HTTP_HOST"] . '/assets');
 ```
 
 
+- [] This
+- [ ] That
+- [x] Yup
+
