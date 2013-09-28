@@ -6,7 +6,7 @@ A starter theme that I (often) use when creating WordPress based websites. It's 
 ## What does it do?
 
 - Adds some nice helper functions
-- Removes all meta boxes from the dashboard, except the "Right now"-box. Even WordPress themself says (no one is using those other meta boxes)[http://make.wordpress.org/ui/2013/08/21/3-8-dashboard-plugin/].
+- Removes all meta boxes from the dashboard, except the "Right now"-box. Even WordPress themself says [no one is using those other meta boxes](http://make.wordpress.org/ui/2013/08/21/3-8-dashboard-plugin/).
 - wp-content is optional renamed to assets
 - Hides things in the ```head```, like WordPress generator. Makes the site less "bloggy" and hopefully a visitor won't go "oh, it's a wordpress site...!"
 - Make links added in the WYSIWYG-editor realaive instead of absolute, so when moving from av test/staging server all links won't go to the wrong URL
