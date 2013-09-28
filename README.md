@@ -3,8 +3,11 @@
 A starter theme that I (often) use when creating websites. It's not perfect, but it helps me to get started.
 
 ## What does it do?
+
 - Adds some nice helper functions
+
 - Removes unnecessary things from the dashboard, like "Other WordPress News", "QuickPress", "WordPress Blog", "Plugins" and "Incoming Links". Even WordPress themself says no one is using them: http://make.wordpress.org/ui/2013/08/21/3-8-dashboard-plugin/
+
 - 
 
 ## wp-config.php
