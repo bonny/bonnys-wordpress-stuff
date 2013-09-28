@@ -11,11 +11,13 @@ A starter theme that I (often) use when creating websites. It's not perfect, but
 - 
 
 ## wp-config.php
-´´´
+
+```php
 # Set WP_CONTENT_DIR to the full local path of this directory (no trailing slash), e.g.
 define( 'WP_CONTENT_DIR', $_SERVER['DOCUMENT_ROOT'] . '/assets' );
 
 #Set WP_CONTENT_URL to the full URI of this directory (no trailing slash), e.g.
 define( 'WP_CONTENT_URL', "http://" . $_SERVER["HTTP_HOST"] . '/assets');
-´´´
+```
+
 
