@@ -2,11 +2,15 @@
 
 class EP {
 
-	var 
-		$cache_group = "ep",
-		$is_debug
-	;
+	// The cache group to use for the wp_cache_* functions
+	var $cache_group = "ep";
 
+	// Bool that determines if this install is on a local dev server
+	var $is_debug = false;
+
+	/**
+	 * Init class
+	 */
 	function init() {
 
 		// Load our helper functions
@@ -53,16 +57,7 @@ class EP {
 		add_action('wp_enqueue_scripts', array($this, 'enqueue_styles_and_scripts') );
 
 		// Remove junk from head-tag
-		remove_filter("wp_head", "wp_generator");
-		remove_action('wp_head', 'rsd_link');
-		remove_action('wp_head', 'wlwmanifest_link');
-		remove_action('wp_head', 'feed_links_extra', 3 );
-		remove_action('wp_head', 'index_rel_link' ); // index link
-		remove_action('wp_head', 'parent_post_rel_link', 10, 0 ); // prev link
-		remove_action('wp_head', 'adjacent_posts_rel_link', 10, 0 );
-		remove_action('wp_head', 'adjacent_posts_rel_link_wp_head', 10, 0 );
-		remove_action('wp_head', 'rel_canonical');
-		add_filter("show_recent_comments_widget_style", "__return_false");
+		$this->cleanup_head();
 
 		// Remove title from inserted attachmentents
 		add_action('wp_get_attachment_image_attributes', 'remove_attachment_title_attr');
@@ -122,12 +117,29 @@ class EP {
 	} // end add admin actions
 
 
-	// Remove x pingback from headers
+	/**
+	 * Remove x pingback from headers
+	 */
 	function remove_x_pingback_header($headers) {
 	    unset($headers['X-Pingback']);
 	    return $headers;
 	}
 
+	/**
+	 * Cleanup head by removing lots of things
+	 */
+	function cleanup_head() {
+		remove_filter("wp_head", "wp_generator");
+		remove_action('wp_head', 'rsd_link');
+		remove_action('wp_head', 'wlwmanifest_link');
+		remove_action('wp_head', 'feed_links_extra', 3 );
+		remove_action('wp_head', 'index_rel_link' ); // index link
+		remove_action('wp_head', 'parent_post_rel_link', 10, 0 ); // prev link
+		remove_action('wp_head', 'adjacent_posts_rel_link', 10, 0 );
+		remove_action('wp_head', 'adjacent_posts_rel_link_wp_head', 10, 0 );
+		remove_action('wp_head', 'rel_canonical');
+		add_filter("show_recent_comments_widget_style", "__return_false");
+	}
 
 	/**
 	 * Cleanup dashboard by removing dashboards meta boxes
@@ -189,7 +201,7 @@ class EP {
 		?>">
 		<?php
 		// find and output image
-		$image = FALSE;
+		$image = false;
 		if (has_post_thumbnail()) {
 			$image = wp_get_attachment_image_src( get_post_thumbnail_id(), "medium");
 			$image = $image[0];
@@ -248,7 +260,7 @@ class EP {
 			wp_deregister_script('jquery');
 			
 			// register it again, this time with no file path
-			wp_register_script('jquery', '', FALSE, '1.10.1', TRUE);
+			wp_register_script('jquery', '', false, '1.10.1', true);
 			
 			// add it back into the queue
 			wp_enqueue_script('jquery');
@@ -270,7 +282,7 @@ class EP {
 		wp_enqueue_style("style_screen", get_template_directory_uri() . '/style.css', null, $latest_file_time);
 
 		// queue scripts
-		wp_enqueue_script("ep_scripts", get_template_directory_uri() . '/js/ep/scripts.js', null, $latest_file_time, TRUE);
+		wp_enqueue_script("ep_scripts", get_template_directory_uri() . '/js/ep/scripts.js', null, $latest_file_time, true);
 
 	}	
 
@@ -286,11 +298,11 @@ class EP {
 		/*
 		register_post_type("smakmatare", array(
 			"label" 		=> __("Smakmätare", "jn"),
-			"public"	 	=> FALSE,
+			"public"	 	=> false,
 			"menu_position"	=> 5,
-			"has_archive" 	=> FALSE,
-			"show_in_nav_menus" => TRUE,
-			"show_ui" => TRUE
+			"has_archive" 	=> false,
+			"show_in_nav_menus" => true,
+			"show_ui" => true
 		));
 		*/
 
