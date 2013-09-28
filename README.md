@@ -27,8 +27,10 @@ define( 'WP_CONTENT_URL', "http://" . $_SERVER["HTTP_HOST"] . '/assets');
 
 ```
 
+- uses [SUIT naming conventions for CSS](https://github.com/suitcss/suit/blob/master/doc/components.md)
 
-# generella funderingar
+
+# Generella funderingar
 
 - mappan där man lägger filer och de automagiskt körs. kanske mapp "plugins-enabled", "plugins-disabled". Ref apaches configs. dock inte plugins pga är inte plugins. extension-available, extensions-enabled
 - enkelt, överskådligt. inte göra för mkt, men ge många bra grunder och funktioner etc.
@@ -48,3 +50,8 @@ define( 'WP_CONTENT_URL', "http://" . $_SERVER["HTTP_HOST"] . '/assets');
     - http://plugins.svn.wordpress.org/recently-registered/trunk/recently-registered.php
 
 
+// find and include files in bugs directory
+$files = glob( get_stylesheet_directory() . "/bugs/*");
+foreach ($files as $filepath) {
+	include_once($filepath);
+}

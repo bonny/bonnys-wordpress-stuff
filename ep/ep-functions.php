@@ -21,9 +21,9 @@
  * @param bool $buffer_and_return_output True if output should be buffered and returned
  * @return Mixed Returns the return value of the $do function
  */
-function with_posts($post_thing, $do, $buffer_and_return_output = FALSE) {
+function with_posts($post_thing, $do, $buffer_and_return_output = false) {
 	
-	if ( ! is_callable( $do ) ) return FALSE;
+	if ( ! is_callable( $do ) ) return false;
 
 	// Set defaults
 	$wp_query_args = array(
@@ -35,7 +35,7 @@ function with_posts($post_thing, $do, $buffer_and_return_output = FALSE) {
 
 	// Get all public custom post types and add to query args
 	$get_post_types_args = array(
-		"public" => TRUE
+		"public" => true
 	);
 	$post_types = get_post_types( $get_post_types_args, $output = 'names');
 	$wp_query_args["post_type"] = array_keys($post_types);
@@ -43,7 +43,7 @@ function with_posts($post_thing, $do, $buffer_and_return_output = FALSE) {
 	$posts_query = NULL;
 	$callback_return = NULL;
 	$buffered_output = NULL;
-	$found_valid_post_thing = FALSE;
+	$found_valid_post_thing = false;
 	
 	global $post;
 	$original_post_global = $post;
@@ -53,7 +53,7 @@ function with_posts($post_thing, $do, $buffer_and_return_output = FALSE) {
 		// If post_thing is numeric then get the post with that id
 		$wp_query_args["post__in"] = array( (int) $post_thing);
 		
-		$found_valid_post_thing = TRUE;
+		$found_valid_post_thing = true;
 
 	} elseif ( is_string( $post_thing ) ) {
 	
@@ -77,7 +77,7 @@ function with_posts($post_thing, $do, $buffer_and_return_output = FALSE) {
 			
 			reset($arr_parsed_thing);
 			$first_key = key($arr_parsed_thing);
-			if ( $arr_parsed_thing[ $first_key ] === "" && strpos( $first_key , ",") !== FALSE ) {
+			if ( $arr_parsed_thing[ $first_key ] === "" && strpos( $first_key , ",") !== false ) {
 		
 				// If post_thing is a comma separated string then get the posts, in the order they are in the string
 
@@ -111,11 +111,11 @@ function with_posts($post_thing, $do, $buffer_and_return_output = FALSE) {
 				$arr_post_vals = array_filter($arr_post_vals);
 
 				// Check if array only is integers
-				$found_only_integers = TRUE;
+				$found_only_integers = true;
 				foreach ($arr_post_vals as $one_val) {
 
 					if ( ! is_numeric($one_val) ) {
-						$found_only_integers = FALSE;
+						$found_only_integers = false;
 						break;
 					}
 				}
@@ -124,7 +124,7 @@ function with_posts($post_thing, $do, $buffer_and_return_output = FALSE) {
 
 				// If not only integers, then assume post_slugs
 				// So quickly fetch the ids of matching pages
-				if ( FALSE === $found_only_integers ) {
+				if ( false === $found_only_integers ) {
 
 					// Match post things like:
 					// with_posts(",nickelodeon,se,fi,,punkd,,hepp,hopp,,"
@@ -152,7 +152,7 @@ function with_posts($post_thing, $do, $buffer_and_return_output = FALSE) {
 				$wp_query_args["post__in"] = $arr_post_ids;
 				$wp_query_args["orderby"] = "post__in";
 
-				$found_valid_post_thing = TRUE;
+				$found_valid_post_thing = true;
 
 			} else if ( $arr_parsed_thing[ $first_key ] === "" ) {
 
@@ -169,7 +169,7 @@ function with_posts($post_thing, $do, $buffer_and_return_output = FALSE) {
 
 			$wp_query_args = wp_parse_args($arr_parsed_thing , $wp_query_args);
 
-			$found_valid_post_thing = TRUE;
+			$found_valid_post_thing = true;
 
 		}
 
@@ -178,7 +178,7 @@ function with_posts($post_thing, $do, $buffer_and_return_output = FALSE) {
 		// If post_thing is a WP_Post-object, like the one you get when using get_post()
 		$wp_query_args["post__in"] = array( (int) $post_thing->ID );
 
-		$found_valid_post_thing = TRUE;
+		$found_valid_post_thing = true;
 
 	} elseif ( is_object( $post_thing ) && get_class( $post_thing ) === "WP_Query" ) {
 
@@ -186,7 +186,7 @@ function with_posts($post_thing, $do, $buffer_and_return_output = FALSE) {
 		// Then just use it
 		$posts_query = $post_thing;
 
-		$found_valid_post_thing = TRUE;
+		$found_valid_post_thing = true;
 
 	} elseif ( is_array( $post_thing ) && isset( $post_thing[0] ) && is_array( $post_thing[0] ) && isset($post_thing[0]["ID"]) && is_numeric($post_thing[0]["ID"]) ) {
 		
@@ -194,7 +194,7 @@ function with_posts($post_thing, $do, $buffer_and_return_output = FALSE) {
 		$arr_post_ids = array();
 		foreach ($post_thing as $one_post_thing) $arr_post_ids[] = $one_post_thing["ID"];
 		$wp_query_args["post__in"] = $arr_post_ids;
-		$found_valid_post_thing = TRUE;
+		$found_valid_post_thing = true;
 
 	} elseif( is_array( $post_thing ) && isset( $post_thing[0] ) && get_class( $post_thing[0] ) === "WP_Post" ) {
 
@@ -202,7 +202,7 @@ function with_posts($post_thing, $do, $buffer_and_return_output = FALSE) {
 		$arr_post_ids = array();
 		foreach ($post_thing as $one_post_thing) $arr_post_ids[] = $one_post_thing->ID;
 		$wp_query_args["post__in"] = $arr_post_ids;
-		$found_valid_post_thing = TRUE;
+		$found_valid_post_thing = true;
 
 	} elseif ( is_array( $post_thing ) ) {
 
@@ -214,14 +214,14 @@ function with_posts($post_thing, $do, $buffer_and_return_output = FALSE) {
 	} // end check type of post_thing
 
 	// We're getting called with something we don't support
-	if (FALSE === $found_valid_post_thing) {
+	if (false === $found_valid_post_thing) {
 
 		_doing_it_wrong( __FUNCTION__, 'You passed something to me that I don\'t understand', '3.5' );
-		return FALSE;
+		return false;
 
 	}
 
-	if ($buffer_and_return_output === TRUE) {
+	if ($buffer_and_return_output === true) {
 		ob_start();
 	}
 
@@ -261,7 +261,7 @@ function with_posts($post_thing, $do, $buffer_and_return_output = FALSE) {
 	if ( ! is_null($post) )
 		setup_postdata($post);
 
-	if ($buffer_and_return_output === TRUE) {
+	if ($buffer_and_return_output === true) {
 		$buffered_output = ob_get_clean();
 		$posts_query->buffered_output = $buffered_output;
 	}
@@ -323,12 +323,12 @@ function ep_get_post($post_id_or_args, $format) {
 		$content = "";
 		$format = $format_org;
 		// only get content if %%CONTENT%% exists. getting the_content multiple times can have strange effects sometimes
-		if (strpos($format, "%%CONTENT%%") !== FALSE) {
+		if (strpos($format, "%%CONTENT%%") !== false) {
 			$content = get_the_content();
 			$content = apply_filters('the_content', $content);
 			$content = str_replace(']]>', ']]&gt;', $content);
 		}
-		if (strpos($format, "%%CONTENT_DIV%%") !== FALSE) {
+		if (strpos($format, "%%CONTENT_DIV%%") !== false) {
 			$content_div = ep_get_the_content("body");
 			if ($content_div) {
 				$content_div = "<div class='post-body'>$content_div</div>";
@@ -339,11 +339,11 @@ function ep_get_post($post_id_or_args, $format) {
 		}
 	
 		// only teaser
-		if (strpos($format, "%%TEASER%%") !== FALSE) {
+		if (strpos($format, "%%TEASER%%") !== false) {
 			$teaser = ep_get_the_content("teaser");
 			$format = str_replace("%%TEASER%%", $teaser, $format);
 		}
-		if (strpos($format, "%%TEASER_DIV%%") !== FALSE) {
+		if (strpos($format, "%%TEASER_DIV%%") !== false) {
 			$teaser = trim(ep_get_the_content("teaser"));
 			if ($teaser) {
 				$teaser = "<div class='post-teaser'>$teaser</div>";
@@ -354,7 +354,7 @@ function ep_get_post($post_id_or_args, $format) {
 		}
 	
 		// content with teaser and body marked in source
-		if (strpos($format, "%%EP_CONTENT%%") !== FALSE) {
+		if (strpos($format, "%%EP_CONTENT%%") !== false) {
 			$ep_content = ep_get_teaser_and_body(get_the_id());
 			$format = str_replace("%%ep_CONTENT%%", $ep_content, $format);
 		}
@@ -579,9 +579,9 @@ function ep_teaser_and_body($post_id = NULL) {
 }
 	
 /**
- Get teaser,
- but if teaser does not exist get body instead
- Good for listing/overview views
+ * Get teaser,
+ * but if teaser does not exist get body instead
+ * Good for listing/overview views
  */
 function ep_get_teaser_or_body() {
 

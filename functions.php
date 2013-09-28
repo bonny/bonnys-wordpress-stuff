@@ -1,11 +1,15 @@
 <?php
 
+/**
+ * @author Pär Thernström
+ */
 class EP {
 
-	// The cache group to use for the wp_cache_* functions
+	// Cache group to use for the wp_cache_* functions
 	var $cache_group = "ep";
+	var $cache_namespace_key = null;
 
-	// Bool that determines if this install is on a local dev server
+	// Bool to detect if debug should be outputed
 	var $is_debug = false;
 
 	/**
@@ -13,29 +17,98 @@ class EP {
 	 */
 	function init() {
 
-		// Load our helper functions
+		$this->detect_debug();
+		
 		$this->load_functions();
 
-		// Determine debug mode
-		$this->detect_debug();
-
-		// Add actions and filters
-		$this->add_common_actions_and_filters();
+		$this->setup_cache();
+		
+		$this->add_actions_and_filters();
+		
 		$this->add_admin_actions_and_filters();
+
+		$this->add_debug_info_to_footer();
+
+		$this->load_external_helpers();
+
 
 	}
 
-	// Detect debug mode
-	// Default if on a *.ep-domain, otherwise can be activated with querystring like:
-	// example.com/?ep-enable-debug=1
+	/**
+	 * Setup cache namespace key, as explained here:
+	 * http://core.trac.wordpress.org/ticket/4476
+	 * 
+	 * When using wp_cache_set and wp_cache_get, do like this:
+	 *
+	 * $my_key = "foo_" . $this->cache_namespace_key . "_12345";
+	 * $my_value = wp_cache_get( $my_key, $this->cache_group );
+	 * wp_cache_set( $my_key, $my_vals, $this->cache_group );
+	 *
+	 */
+	function setup_cache() {
+
+		// Get previos saved namespace key
+		$this->cache_namespace_key = wp_cache_get( 'cache_namespace_key', $this->cache_group );
+
+		// If not set, initialize it
+		if ( $this->cache_namespace_key === false )
+			wp_cache_set( 'cache_namespace_key', 1, $this->cache_group );
+
+	}
+
+	/**
+	 * Increment cache group key, so next time caches are used they are freshed ("emptied")
+	 * Use when caches need to be cleared, and you have keys that are dynamically created,
+	 * or if you for some reason need to clear the whole cache for the group
+	 */
+	function cache_incr() {
+
+		$this->cache_namespace_key = wp_cache_incr( 'cache_namespace_key', 1, $this->cache_group );
+		echo "<br>new cache namespace key: " . $this->cache_namespace_key;
+
+	}
+
+
+	/**
+	 * Load helper functions
+	 */
+	function load_functions() {
+
+		require_once(dirname(__FILE__) . "/ep/ep-functions.php");
+		require_once(dirname(__FILE__) . "/ep/ep-simple-front-end-edit-buttons.php");
+
+	}
+
+	/**
+	 * Load external helpers
+	 * Simple place a PHP file in includes-enabled/ and it will be loaded
+	 * Files are loaded in alphabetical order
+	 */
+	function load_external_helpers() {
+
+		// find and include files in bugs directory
+		$files = glob( get_stylesheet_directory() . "/includes-enabled/*");
+		foreach ($files as $filepath) {
+			// Use load_template so $post and other globals are automatically set
+			load_template($filepath, true, true );
+		}
+
+	}
+
+	/**
+	 * Detect debug mode
+	 * Default if on a *.ep-domain, otherwise can be activated with querystring like:
+	 * example.com/?ep-enable-debug=1
+	 */
 	function detect_debug() {
 
 		$is_debug = false;
 
-		// is domain.ep | example.ep | site.ep | *.ep
 		if ( preg_match('/.ep$/', $_SERVER["HTTP_HOST"] ) ) {
+			// if domain has top level domain ep, like domain.ep | example.ep | site.ep | *.ep
 			$is_debug = true;
 		} else if ( isset( $_GET["ep-enable-debug"] ) && $_GET["ep-enable-debug"] ) {	
+			// if debug flag is set
 			$is_debug = true;
 		}
 
@@ -43,12 +116,10 @@ class EP {
 
 	}
 
-	// Actions and filters that are to be run during all request
-	function add_common_actions_and_filters() {
-
-		// Add menus, post types, and similar
-		add_filter("init", array($this, "add_menus"));
-		add_filter("init", array($this, "add_post_types"));
+	/**
+	 * Actions and filters that are to be run during all request
+	 */
+	function add_actions_and_filters() {
 
 		// Make jquery load from google CDN
 		add_action('template_redirect', array($this, 'load_jquery_from_cdn'));
@@ -56,7 +127,7 @@ class EP {
 		// Load our scripts and styles
 		add_action('wp_enqueue_scripts', array($this, 'enqueue_styles_and_scripts') );
 
-		// Remove junk from head-tag
+		// Remove junk from head
 		$this->cleanup_head();
 
 		// Remove title from inserted attachmentents
@@ -77,22 +148,15 @@ class EP {
 		add_filter('body_class', array($this, "add_dev_to_body_class"));
 		add_filter('wp_headers', array($this, 'remove_x_pingback_header'));
 
-		// Add classes to wp_list_pages that tell us if the page has childs/sub pages. makes it possible to style the parent
-		add_filter('page_css_class', array($this, 'add_page_css_has_children'), 10, 5);
-		add_action('save_post', array($this, 'delete_add_page_css_has_children_cache' ));
-		add_action('delete_post', array($this, 'delete_add_page_css_has_children_cache'));
-
 		// Makes the function var_template_include() work
 		add_filter( 'template_include', array($this, 'var_template_include'), 1000 );
 
 	}
 
-	function add_dev_to_body_class($classes) {
-		if ($this->is_debug) $classes[] = "ep-is-dev";
-		return $classes;
-	}
 
-	// Actions and filters that are to be run on admin pages
+	/**
+	 * Actions and filters that are run on admin pages
+	 */
 	function add_admin_actions_and_filters() {
 
 		if ( ! is_admin() )
@@ -118,6 +182,15 @@ class EP {
 
 
 	/**
+	 * Add class .ep-is-dev to the body element if we are in debug mode
+	 */
+	function add_dev_to_body_class($classes) {
+		if ($this->is_debug) $classes[] = "ep-is-dev";
+		return $classes;
+	}
+
+
+	/**
 	 * Remove x pingback from headers
 	 */
 	function remove_x_pingback_header($headers) {
@@ -129,6 +202,7 @@ class EP {
 	 * Cleanup head by removing lots of things
 	 */
 	function cleanup_head() {
+
 		remove_filter("wp_head", "wp_generator");
 		remove_action('wp_head', 'rsd_link');
 		remove_action('wp_head', 'wlwmanifest_link');
@@ -139,6 +213,7 @@ class EP {
 		remove_action('wp_head', 'adjacent_posts_rel_link_wp_head', 10, 0 );
 		remove_action('wp_head', 'rel_canonical');
 		add_filter("show_recent_comments_widget_style", "__return_false");
+
 	}
 
 	/**
@@ -184,13 +259,16 @@ class EP {
 		if (post_password_required($post)) return;
 
 		setup_postdata($post);
-		?>
+		
+		?> 
 		<meta property="og:title" content="<?php the_title() ?>">
-		<meta property="og:site_name" content="<?php bloginfo('name') ?>">
-		<?php $excerpt = get_the_excerpt(); if ($excerpt) { ?>
+		<meta property="og:site_name" content="<?php bloginfo('name') ?>"><?php
+		$excerpt = get_the_excerpt();
+		if ($excerpt) {
+		?> 
 		<meta property="og:description" content="<?php echo esc_attr($excerpt); ?>">
-		<meta name="description" content="<?php echo esc_attr($excerpt) ?>">
-		<?php } ?>
+		<meta name="description" content="<?php echo esc_attr($excerpt) ?>"><?php
+		} ?> 
 		<meta property="og:url" content="<?php echo get_permalink() ?>"/>	
 		<meta property="og:type" content="<?php
 		if (is_single() || is_page() && !is_home() && !is_front_page()) {
@@ -268,8 +346,10 @@ class EP {
 		}
 	}
 
-	// Add our scripts for this site
-	// Automatically cache busts them, based on last changed date on any file
+	/**
+	 * Add scripts for this site
+	 * Automatically cache busts them, based on last changed date on any file
+	 */
 	function enqueue_styles_and_scripts() {
 
 		// find modification time of the latest js or css file, max one folder down
@@ -287,75 +367,51 @@ class EP {
 	}	
 
 
-	function load_functions() {
-		require_once(dirname(__FILE__) . "/ep/ep-functions.php");
-		require_once(dirname(__FILE__) . "/ep/ep-simple-front-end-edit-buttons.php");
-	}
-
-
-	function add_post_types() {
-
-		/*
-		register_post_type("smakmatare", array(
-			"label" 		=> __("Smakmätare", "jn"),
-			"public"	 	=> false,
-			"menu_position"	=> 5,
-			"has_archive" 	=> false,
-			"show_in_nav_menus" => true,
-			"show_ui" => true
-		));
-		*/
-
-	}
-
-	function add_menus() {
-
-		/*
-		register_nav_menus(array(
-			"nav_primary" => "Huvudmeny"
-		));
-		*/
-
-	}
-
-	// Code to get current template. Found here:
-	// http://wordpress.stackexchange.com/questions/10537/get-name-of-the-current-template-file
+	/**
+	 * Sets a global variable to track the current template being used
+	 * Needed for get_current_template()
+	 *
+	 * Code to get current template. Found here:
+	 * http://wordpress.stackexchange.com/questions/10537/get-name-of-the-current-template-file
+	 */
 	function var_template_include( $t ){
 	    $GLOBALS['current_theme_template'] = basename($t);
 	    return $t;
 	}
 
-	// return the name of the current template
+	/**
+	 * Return the name of the current template
+	 * @return string Template file name
+	 */
 	function get_current_template( $echo = false ) {
+	    
 	    if( !isset( $GLOBALS['current_theme_template'] ) )
 	        return false;
-	    if( $echo )
+	    
+	    if ( $echo )
 	        echo $GLOBALS['current_theme_template'];
 	    else
 	        return $GLOBALS['current_theme_template'];
+
 	}
 
-	// for wp list pages: add a class that tell us if the page has childs/sub pages. makes it possible to style the parent
-	// $css_class, $page, $depth, $args, $current_page
-	function add_page_css_has_children($css_class, $page, $depth, $args, $current_page) {
+	/**
+	 * Show debug info in the footer, if ep_debug is detected/activated
+	 */
+	function add_debug_info_to_footer() {
 
-		$cache_key = "add_page_css_has_children_" . md5( json_encode(func_get_args()) );
-		$children = wp_cache_get( $cache_key, $this->cache_group );
+		add_action("wp_footer", function() {
+			global $wpdb;
+			?>
+			<div class="ep-debug ep-debug-footer">
+				<?php echo $this->get_current_template() ?>:
+				<?php echo $wpdb->num_queries; ?> <?php _e('queries'); ?>,
+				generated in <?php timer_stop(1); ?> seconds, 
+				<?php echo round( memory_get_peak_usage() / 1024 / 1024, 2 ) ?> MB peak memory usage.
+			</div>
+			<?php			
+		});
 
-		if ( false === $children ) {
-			$children = get_children("post_parent=$page->ID&post_type[]=page&post_type[]=company&post_status=publish");
-			wp_cache_set( $cache_key, $children, $this->cache_group);
-		}
-
-		if ( $children ) {
-			$css_class[] = "page_has_children";
-		}
-
-		return $css_class;
-	}
-
-	function delete_add_page_css_has_children_cache($post_id) {
-		wp_cache_delete( $post_id, "ep_add_page_css_has_children" );
 	}
 
 
