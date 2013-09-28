@@ -100,7 +100,8 @@ class EP {
 	// Actions and filters that are to be run on admin pages
 	function add_admin_actions_and_filters() {
 
-		if ( ! is_admin() ) return;
+		if ( ! is_admin() )
+			return;
 
 		// Remove junk from dashboard, like recent comments & rss feeds
 		add_action("admin_init", array($this, "cleanup_dashboard"));
@@ -133,10 +134,9 @@ class EP {
 	 */
 	function cleanup_dashboard() {
 
-		#remove_meta_box('dashboard_quick_press', 'dashboard', 'normal');  // quick press
-		#remove_meta_box('dashboard_recent_drafts', 'dashboard', 'normal');  // recent drafts
-
-		remove_meta_box('dashboard_right_now', 'dashboard', 'normal');
+		// remove_meta_box('dashboard_right_now', 'dashboard', 'normal');
+		remove_meta_box('dashboard_quick_press', 'dashboard', 'normal');  // quick press
+		remove_meta_box('dashboard_recent_drafts', 'dashboard', 'normal');  // recent drafts
 		remove_meta_box('dashboard_recent_comments', 'dashboard', 'normal');
 		remove_meta_box('dashboard_incoming_links', 'dashboard', 'normal');
 		remove_meta_box('dashboard_plugins', 'dashboard', 'normal');
@@ -152,6 +152,7 @@ class EP {
 
 		// Remove (blog) posts menu
 		remove_menu_page("edit.php");
+		
 		// Remove comments menu
 		remove_menu_page("edit-comments.php");
 
@@ -178,9 +179,9 @@ class EP {
 		<meta property="og:description" content="<?php echo esc_attr($excerpt); ?>">
 		<meta name="description" content="<?php echo esc_attr($excerpt) ?>">
 		<?php } ?>
-		<meta property="og:url" content="<?php echo home_url(get_permalink()) ?>"/>	
+		<meta property="og:url" content="<?php echo get_permalink() ?>"/>	
 		<meta property="og:type" content="<?php
-		if (is_single() || is_page()) {
+		if (is_single() || is_page() && !is_home() && !is_front_page()) {
 			echo "article";
 		} else {
 			echo "website";
