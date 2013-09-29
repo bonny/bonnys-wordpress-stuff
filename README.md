@@ -11,7 +11,7 @@ A starter theme that I (often) use when creating WordPress based websites. It's 
 - Hides things in the ```head```, like WordPress generator. Makes the site less "bloggy" and hopefully a visitor won't go "oh, it's a wordpress site...!"
 - Make links added in the WYSIWYG-editor realaive instead of absolute, so when moving from av test/staging server all links won't go to the wrong URL
 - Does not contain to much things in the templates, since it all depends on the site you're doing anyway.
-
+- Automatically loads include files for directory ``ìncludes-enabled```. Just place your files there and they will be loaded.
 
 ## wp-config.php
 

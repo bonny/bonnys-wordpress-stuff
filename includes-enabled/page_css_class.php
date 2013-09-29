@@ -25,6 +25,7 @@ function add_page_css_has_children($css_class, $page, $depth, $args, $current_pa
 		return $css_class;
 
 	$cache_key = "add_page_css_has_children_" . $ep->cache_namespace_key . "_" . md5( json_encode(func_get_args()) );
+
 	$children = wp_cache_get( $cache_key, $ep->cache_group );
 
 	if ( false === $children ) {
