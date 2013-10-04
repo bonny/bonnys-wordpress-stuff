@@ -17,7 +17,10 @@ add_filter("parse_request", "sfeeb_parse_request_edit_prio");
 add_action('widget_pages_args', "sfeeb_widget_pages_args");
 add_action('wp_list_pages', "sfeeb_wp_list_pages");
 add_action('page_css_class', "sfeeb_page_css_class");
-add_action("wp_head", "sfeeb_wp_head", 0);
+
+// Add scripts to head. Use 5 in prio to move above included styles, so no blocking will occur.
+add_action("wp_head", "sfeeb_wp_head", 5);
+
 // add_action("wp_footer", "sfeeb_wp_footer");
 add_action("wp_enqueue_scripts", "sfeeb_enqueue_scripts");
 add_filter("get_pages", "sfeeb_get_pages", 10, 2);
@@ -28,10 +31,7 @@ add_action("widgets_admin_page", "sfeeb_widgets_admin_page");
 
 function sfeeb_wp_head() {
 	?>
-	<script>
-		var ep = window.ep || {};
-		ep.ajaxurl = '<?php echo admin_url('admin-ajax.php'); ?>';
-	</script>
+	<script>var ep = window.ep || {};ep.ajaxurl = '<?php echo admin_url('admin-ajax.php'); ?>';</script>
 	<?php
 }
 
