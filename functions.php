@@ -130,6 +130,9 @@ class EP {
 		// Remove junk from head
 		$this->cleanup_head();
 
+		// Remove WordPress-logo from admin bar
+		add_action('wp_before_admin_bar_render', array($this, 'admin_bar_remove_wp_logo'), 0);
+
 		// Remove title from inserted attachmentents
 		add_action('wp_get_attachment_image_attributes', 'remove_attachment_title_attr');
 
@@ -139,7 +142,7 @@ class EP {
 		remove_filter( 'comment_text', 'capital_P_dangit', 31 );
 
 		// Remove WPML-generator tag
-		global $sitepress; if (isset($sitepress) && is_object($sitepress)) remove_filter("wp_head", array($sitepress, "meta_generator_tag"));
+		$this->sitepress_remove_generator();
 
 		// Add things to head-stuff, like titles, tagss
 		add_filter('wp_title', array($this, "add_tagline_to_title_if_front_or_home"), 10, 3);
@@ -152,6 +155,25 @@ class EP {
 
 	}
 
+	/**
+	 * Removes the sitepress/wpml generator tag from head
+	 */
+	function sitepress_remove_generator() {
+		global $sitepress;
+		if (isset($sitepress) && is_object($sitepress))
+			remove_filter("wp_head", array($sitepress, "meta_generator_tag"));
+	}
+
+	/**
+	 * Remves the WordPress-logo from the admin bar
+	 * Called from action wp_get_attachment_image_attributes
+	 */
+	function admin_bar_remove_wp_logo() {
+
+		global $wp_admin_bar;
+		$wp_admin_bar->remove_menu('wp-logo');
+
+	}
 
 	/**
 	 * Actions and filters that are run on admin pages
