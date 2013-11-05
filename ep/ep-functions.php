@@ -69,7 +69,10 @@ function with_posts($post_thing, $do, $buffer_and_return_output = false) {
 		
 		if ( is_null( $arr_parsed_thing ) || ! is_array( $arr_parsed_thing ) ) {
 			// Something went bananas
-			break;
+			// Can't break, so...what?
+			// break;
+			_doing_it_wrong( __FUNCTION__, 'You passed a string to me that I don\'t understand', '3.5' );
+			return false;
 		}
 
 		// If size is just one, and key contains commas, and value is empty, 
@@ -111,7 +114,6 @@ function with_posts($post_thing, $do, $buffer_and_return_output = false) {
 				
 				// Remove empty vals from array
 				$arr_post_vals = array_filter($arr_post_vals);
-
 				// Check if array only is integers
 				$found_only_integers = true;
 				foreach ($arr_post_vals as $one_val) {
@@ -142,6 +144,13 @@ function with_posts($post_thing, $do, $buffer_and_return_output = false) {
 					$sql = "SELECT ID from $wpdb->posts WHERE post_name IN $sql_in";
 					$results = $wpdb->get_results( $sql, "OBJECT_K" );
 					$arr_post_ids = array_keys( $results );
+
+					// If no posts where found for these slugs 
+					// then do something to prevent that all posts are being outputed
+					if ( empty($arr_post_ids) ) {
+						// set to show post with num 0, i.e. a post that does not exist
+						$arr_post_ids[] = 0;
+					}
 
 				} else {
 					
@@ -227,7 +236,9 @@ function with_posts($post_thing, $do, $buffer_and_return_output = false) {
 		ob_start();
 	}
 
-	if ( is_null( $posts_query ) ) $posts_query = new wp_query($wp_query_args);
+	if ( is_null( $posts_query ) )
+		$posts_query = new wp_query($wp_query_args);
+
 	if ( $posts_query->have_posts() ) {
 
 		$arr_return_to_callback = array(
