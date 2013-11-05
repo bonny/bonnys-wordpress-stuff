@@ -23,7 +23,8 @@
  */
 function with_posts($post_thing, $do, $buffer_and_return_output = false) {
 	
-	if ( ! is_callable( $do ) ) return false;
+	if ( ! is_callable( $do ) )
+		return false;
 
 	// Set defaults
 	$wp_query_args = array(
