@@ -29,6 +29,7 @@ function with_posts($post_thing, $do, $buffer_and_return_output = false) {
 	$wp_query_args = array(
 		"post_status" => "publish",
 		"posts_per_page" => -1,
+		"ignore_sticky_posts" => true,
 		"orderby" => "date",
 		"order" => "DESC",
 	);
