@@ -41,7 +41,11 @@ function sfeeb_wp_head() {
 function sfeeb_widgets_admin_page() {
 
 	if (isset($_GET["ep_edit_widget"])) {
-		$ep_edit_widget_id = $_GET["ep_edit_widget_id"];
+		
+		$ep_edit_widget_id = isset( $_GET["ep_edit_widget_id"] ) ? (int) $_GET["ep_edit_widget_id"] : 0;
+		if ( ! $ep_edit_widget_id )
+			return;
+		
 		?>
 		<script>
 		jQuery(function($) {
