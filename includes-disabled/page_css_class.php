@@ -3,6 +3,9 @@
 /**
  * Add class to wp_list_pages that tell us if the page has childs/sub pages.
  * Makes it possible to style the parent
+ *
+ * This seems to be enabled by default in WP 3.6 or something
+ * Commit here: https://github.com/WordPress/WordPress/commit/57608093192948e4e8f3d005a332b8c824f86e44
  */
 
 namespace EP\page_css_class;
@@ -34,7 +37,7 @@ function add_page_css_has_children($css_class, $page, $depth, $args, $current_pa
 	}
 
 	if ( $children ) {
-		$css_class[] = "page--hasChildren";
+		$css_class[] = "has-children";
 	}
 
 	return $css_class;
