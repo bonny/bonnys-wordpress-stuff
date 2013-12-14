@@ -7,39 +7,44 @@
  * http://ogp.me
  */
 
-namespace EP\add_open_graph;
+namespace EP\frontend\add_open_graph;
 
+// Don't run on admin pages
 if ( is_admin() )
 	return;
 
-add_action("wp_head", __NAMESPACE__ . '\add_open_graph_tags');		
-
+/**
+ * Output og tags inside <head>
+ */
 function add_open_graph_tags() {
 
 	global $post;
 
-	if (is_null($post)) return;
-	if (post_password_required($post)) return;
+	if (is_null($post))
+		return;
+
+	if (post_password_required($post)) 
+		return;
 
 	setup_postdata($post);
 	
-	?> 
+	$og_type = "website";
+	if ( is_single() || is_page() && ! is_home() && ! is_front_page() ) {
+		$og_type = "article";
+	}
+
+	?>
 	<meta property="og:title" content="<?php the_title() ?>">
-	<meta property="og:site_name" content="<?php bloginfo('name') ?>"><?php
+	<meta property="og:site_name" content="<?php bloginfo('name') ?>">
+	<?php
 	$excerpt = get_the_excerpt();
 	if ($excerpt) {
-	?> 
-	<meta property="og:description" content="<?php echo esc_attr($excerpt); ?>">
-	<meta name="description" content="<?php echo esc_attr($excerpt) ?>"><?php
+		?> 
+		<meta property="og:description" content="<?php echo esc_attr($excerpt); ?>">
+		<meta name="description" content="<?php echo esc_attr($excerpt) ?>"><?php
 	} ?> 
 	<meta property="og:url" content="<?php echo get_permalink() ?>"/>	
-	<meta property="og:type" content="<?php
-	if (is_single() || is_page() && !is_home() && !is_front_page()) {
-		echo "article";
-	} else {
-		echo "website";
-	}
-	?>">
+	<meta property="og:type" content="<?php echo $og_type ?>">
 	<?php
 	// find and output image
 	$image = false;
@@ -54,4 +59,6 @@ function add_open_graph_tags() {
 	<meta property="og:image" content="<?php echo home_url($image) ?>">
 	<?php
 	}
+
 }
+add_action("wp_head", __NAMESPACE__ . '\add_open_graph_tags');

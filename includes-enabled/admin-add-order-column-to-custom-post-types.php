@@ -2,9 +2,10 @@
 
 /**
  * Adds an "Order" column to all custom post types
+ * so custom post types can
  */
 
-namespace EP\custom_post_type_order;
+namespace EP\admin\custom_post_type_order;
 
 add_action("admin_init", function() {
 

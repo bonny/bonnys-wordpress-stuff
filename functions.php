@@ -81,7 +81,7 @@ class EP {
 
 	/**
 	 * Load external helpers
-	 * Simple place a PHP file in includes-enabled/ and it will be loaded
+	 * Put a PHP file in includes-enabled/ and it will be loaded
 	 * Files are loaded in alphabetical order
 	 */
 	function load_external_helpers() {
@@ -105,11 +105,15 @@ class EP {
 		$is_debug = false;
 
 		if ( preg_match('/.ep$/', $_SERVER["HTTP_HOST"] ) ) {
-			// if domain has top level domain ep, like domain.ep | example.ep | site.ep | *.ep
+
+			// if domain has top level domain ep, like domain.ep | example.ep | site.ep | *.ep then enable debug mode
 			$is_debug = true;
+
 		} else if ( isset( $_GET["ep-enable-debug"] ) && $_GET["ep-enable-debug"] ) {	
+
 			// if debug flag is set
 			$is_debug = true;
+
 		}
 
 		$this->is_debug = $is_debug;
@@ -122,7 +126,7 @@ class EP {
 	function add_actions_and_filters() {
 
 		// Make jquery load from google CDN
-		add_action('template_redirect', array($this, 'load_jquery_from_cdn'));
+		// add_action('template_redirect', array($this, 'load_jquery_from_cdn'));
 
 		// Load our scripts and styles
 		add_action('wp_enqueue_scripts', array($this, 'enqueue_styles_and_scripts') );

@@ -1,0 +1,5 @@
+# Hide all files starting with a dot (aka 'hidden files')
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
