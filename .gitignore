@@ -1,2 +1,8 @@
 *.sublime-project
 *.sublime-workspace
+
+.ep-config.json
+
+includes-disabled/sf-issue-94.php
+
+includes-disabled/with-posts-test-slug.php
