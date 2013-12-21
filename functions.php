@@ -239,10 +239,6 @@ class EP {
 		remove_action('wp_head', 'rel_canonical');
 		add_filter("show_recent_comments_widget_style", "__return_false");
 
-		// Remove metabox for WPML
-		$wpml_dasbhboard_widget_id = "icl_dashboard_widget";
-		remove_meta_box( $wpml_dasbhboard_widget_id, "dashboard", "normal" );
-
 	}
 
 	/**
@@ -258,6 +254,10 @@ class EP {
 		remove_meta_box('dashboard_plugins', 'dashboard', 'normal');
 		remove_meta_box('dashboard_primary', 'dashboard', 'normal');
 		remove_meta_box('dashboard_secondary', 'dashboard', 'normal');
+
+		// Remove metabox for WPML
+		$wpml_dasbhboard_widget_id = "icl_dashboard_widget";
+		remove_meta_box( $wpml_dasbhboard_widget_id, "dashboard", "normal" );
 
 	}
 
