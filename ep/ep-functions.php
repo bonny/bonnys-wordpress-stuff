@@ -962,28 +962,6 @@ function remove_attachment_title_attr( $attr ) {
 }
 
 /**
- * Makes the permalink for a post/page/custom post type more futureproof by creating
- * relative paths instead of absolute paths.
- * This is a benefit when developing a website on several domains, so you don't have to change all
- * links from http://beta.example.com/ to http://example.com/.
- */
-function relativize_links() {
-	$arr_filters = array(
-		"post_link", 
-		"post_type_link", 
-		"page_link", 
-		// "theme_root_uri", // had problem enqueing styles when wp is in subdir
-		"wp_get_attachment_url", 
-		"term_link", 
-		"tag_link", 
-		"category_link"
-	);
- 	foreach ($arr_filters as $filter_name) {
- 		add_filter($filter_name, 'wp_make_link_relative');
- 	}
-}
-
-/**
  * Custom callback for outputting comments 
  *
  * @return void

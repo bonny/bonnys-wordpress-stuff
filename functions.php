@@ -193,9 +193,6 @@ class EP {
 		// Remove menu items like posts and comments
 		// add_action("admin_menu", array($this, "cleanup_admin_menu"));
 		
-		// Make links in add link-popup become relative
-		add_filter("admin_init", "relativize_links" );
-
 		// Remove "Thank you for creating with WordPress"-text in bottom
 		add_filter("admin_footer_text", "__return_false");
 
