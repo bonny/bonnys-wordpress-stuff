@@ -79,7 +79,7 @@ foreach ( $fragment_cache_increment_actions as $one_action ) {
 }
 
 function fragment_cache_incr() {
-	update_option( "fragment_cache_key_incrementor",time() );
+	update_option( "fragment_cache_key_incrementor", time() );
 }
 
 // test cache
