@@ -34,3 +34,15 @@ html,button,input,select,textarea{color:#222}body{font-size:1em;line-height:1.4}
 .ep-is-dev .ep-debug {
 	display: block;
 }
+
+/** Recommended wp styles for oembeds
+ * see http://codex.wordpress.org/Content_Width
+ */
+.size-auto, 
+.size-full,
+.size-large,
+.size-medium,
+.size-thumbnail {
+	max-width: 100%;
+	height: auto;
+}
