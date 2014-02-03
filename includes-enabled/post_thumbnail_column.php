@@ -26,6 +26,9 @@ function admin_head() {
 // Add column to position after title
 function posts_columns($columns) {
 	
+	if ( ! post_type_supports( get_post_type(), "thumbnail" ) )
+		return $columns;
+
 	// $columns = array('ep_post_thumbs' => __('Featured Image') );
 	$new_col = array(
 		'ep_post_thumbs' => __('Featured Image')
@@ -43,7 +46,7 @@ function posts_columns($columns) {
 
 // Output column contents
 function posts_custom_columns($column_name, $id){
-		
+
 	if ( $column_name === 'ep_post_thumbs' && has_post_thumbnail() ) {
 
 		printf('%1$s', the_post_thumbnail( array(THUMBNAIL_SIZE, THUMBNAIL_SIZE) ));
