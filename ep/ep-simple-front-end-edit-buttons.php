@@ -60,7 +60,7 @@ function sfeeb_widgets_admin_page() {
 					var $elm = $(elm);
 					$in = $elm.find(".widget-inside");
 					$in.slideDown("slow", function() {
-						$elm.effect("highlight", {}, 4000);
+						// $elm.effect("highlight", {}, 4000);
 					});
 					
 				}
