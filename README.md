@@ -18,15 +18,25 @@ A starter theme that I (often) use when creating WordPress based websites. It's 
 
 ## wp-config.php
 
-Add this to your ```wp-config.php```-file to rename use ```/assets/``` instead of ```/wp-content/``.
+Some things to have in your wp-config.php:
+
+Add this to your ```wp-config.php```-file to use ```/assets/``` instead of ```/wp-content/``.
 
 ```php
 
 # Set WP_CONTENT_DIR to the full local path of this directory (no trailing slash), e.g.
 define( 'WP_CONTENT_DIR', dirname(__FILE__) . '/assets' );
 
-#Set WP_CONTENT_URL to the full URI of this directory (no trailing slash), e.g.
+# Set WP_CONTENT_URL to the full URI of this directory (no trailing slash), e.g.
 define( 'WP_CONTENT_URL', "http://" . $_SERVER["HTTP_HOST"] . '/assets');
+
+```
+
+```php
+
+// Use this to dynamically set home and siteurls
+define('WP_HOME', "http://" . $_SERVER["SERVER_NAME"] . "");
+define('WP_SITEURL', "http://" . $_SERVER["SERVER_NAME"] . "/wp");
 
 ```
 
