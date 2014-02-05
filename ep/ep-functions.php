@@ -4,6 +4,69 @@
  * Misc useful functions go here
  */
 
+/**
+ * Get menu from top item
+ * @param string $menu_name
+ * @return nav item object
+ */
+function ep_get_nav_menu_top_parent($menu_name) {
+
+	$menulocations = get_nav_menu_locations();
+	$menu_items = wp_get_nav_menu_items( $menulocations[$menu_name] );
+	$top_parent_item = null;
+	$current_item = null;
+	$parent_item = null;
+
+	// Find current post in menu
+	foreach ($menu_items as $one_item) {
+		if (get_queried_object_id() == $one_item->object_id) {
+			$current_item = $one_item;
+			break;
+		}
+	}
+
+	if ($current_item) {
+
+		// got current item, now look for top parent
+		$parent_item = $current_item;
+		$found_parent_item = null;
+		while ( $found_parent_item !== false ) {
+			$found_parent_item = ep_get_nav_item_parent($parent_item, $menu_items);
+			if ($found_parent_item !== false)
+				$parent_item = $found_parent_item;
+		}
+
+	}
+
+	return $parent_item;
+
+}
+
+
+/**
+ * Get the parent nav item
+ * @param $single_menu_item The nav item to look for parent to
+ * @param $menu_items array with all nav items, as gotten from wp_get_nav_menu_items
+ * @return nav item
+ */
+function ep_get_nav_item_parent($single_menu_item, $menu_items) {
+	
+	if ( empty( $single_menu_item->menu_item_parent ) ) {
+		return false;
+	}
+
+	foreach ($menu_items as $one_menu_item) {
+
+		if ($single_menu_item->menu_item_parent == $one_menu_item->ID) {
+			return $one_menu_item;
+		}
+
+	}
+
+	return false;
+
+}
+
 
 /**
  * WordPress WP_QUERY-wrapper to simplify getting and working with posts
