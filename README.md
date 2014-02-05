@@ -23,7 +23,7 @@ Add this to your ```wp-config.php```-file to rename use ```/assets/``` instead o
 ```php
 
 # Set WP_CONTENT_DIR to the full local path of this directory (no trailing slash), e.g.
-define( 'WP_CONTENT_DIR', $_SERVER['DOCUMENT_ROOT'] . '/assets' );
+define( 'WP_CONTENT_DIR', dirname(__FILE__) . '/assets' );
 
 #Set WP_CONTENT_URL to the full URI of this directory (no trailing slash), e.g.
 define( 'WP_CONTENT_URL', "http://" . $_SERVER["HTTP_HOST"] . '/assets');
