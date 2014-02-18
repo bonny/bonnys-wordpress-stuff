@@ -1,6 +1,9 @@
 {
   "name": "eptheme",
   "version": "0.0.0",
+  "dependencies": {
+    "foundation": "zurb/bower-foundation"
+  },
   "ignore": [
     "**/.*",
     "node_modules",

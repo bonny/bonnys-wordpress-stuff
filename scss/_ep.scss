@@ -1,0 +1,18 @@
+.ep-debug {
+	display: none;
+	background-color: rgb(217,237,247);
+	line-height: 1;
+	font-family: sans-serif;
+	font-size: 12px;
+	padding: .5em;
+	position: fixed; bottom: 0; right: 0;
+	transition: opacity .15s ease-in-out;
+	opacity: .5;	
+}
+.ep-debug:hover {
+	opacity: .9;
+}
+
+.ep-is-dev .ep-debug {
+	display: block;
+}
