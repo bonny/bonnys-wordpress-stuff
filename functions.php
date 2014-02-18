@@ -25,9 +25,9 @@ class EP {
 		
 		$this->add_actions_and_filters();
 		
-		$this->add_admin_actions_and_filters();
+		// $this->add_admin_actions_and_filters();
 
-		$this->add_debug_info_to_footer();
+		// $this->add_debug_info_to_footer();
 
 		$this->load_external_helpers();
 
@@ -131,12 +131,6 @@ class EP {
 		// Load our scripts and styles
 		add_action('wp_enqueue_scripts', array($this, 'enqueue_styles_and_scripts') );
 
-		// Remove junk from head
-		$this->cleanup_head();
-
-		// Remove WordPress-logo from admin bar
-		add_action('wp_before_admin_bar_render', array($this, 'admin_bar_remove_wp_logo'), 0);
-
 		// Remove title from inserted attachmentents
 		add_action('wp_get_attachment_image_attributes', 'remove_attachment_title_attr');
 
@@ -145,63 +139,15 @@ class EP {
 		remove_filter( 'the_content', 'capital_P_dangit', 11 );
 		remove_filter( 'comment_text', 'capital_P_dangit', 31 );
 
-		// Remove WPML-generator tag
-		$this->sitepress_remove_generator();
-
-		// Add things to head-stuff, like titles, tagss
+		// Add things to head-stuff, like titles, tags
 		add_filter('wp_title', array($this, "add_tagline_to_title_if_front_or_home"), 10, 3);
 		add_filter('body_class', "add_page_slug_to_body_class");
-		add_filter('body_class', array($this, "add_dev_to_body_class"));
-		add_filter('wp_headers', array($this, 'remove_x_pingback_header'));
-
+		//add_filter('body_class', array($this, "add_dev_to_body_class"));
+		
 		// Makes the function var_template_include() work
 		add_filter( 'template_include', array($this, 'var_template_include'), 1000 );
 
 	}
-
-	/**
-	 * Removes the sitepress/wpml generator tag from head
-	 */
-	function sitepress_remove_generator() {
-		global $sitepress;
-		if (isset($sitepress) && is_object($sitepress))
-			remove_filter("wp_head", array($sitepress, "meta_generator_tag"));
-	}
-
-	/**
-	 * Remves the WordPress-logo from the admin bar
-	 * Called from action wp_get_attachment_image_attributes
-	 */
-	function admin_bar_remove_wp_logo() {
-
-		global $wp_admin_bar;
-		$wp_admin_bar->remove_menu('wp-logo');
-
-	}
-
-	/**
-	 * Actions and filters that are run on admin pages
-	 */
-	function add_admin_actions_and_filters() {
-
-		if ( ! is_admin() )
-			return;
-
-		// Remove junk from dashboard, like recent comments & rss feeds
-		add_action("admin_init", array($this, "cleanup_dashboard"));
-
-		// Remove menu items like posts and comments
-		// add_action("admin_menu", array($this, "cleanup_admin_menu"));
-		
-		// Remove "Thank you for creating with WordPress"-text in bottom
-		add_filter("admin_footer_text", "__return_false");
-
-		// Set a custom order for the menu, for example pages above posts
-		add_filter('custom_menu_order', '__return_true');
-		add_filter('menu_order', array($this, "set_menu_order"));	
-
-	} // end add admin actions
-
 
 	/**
 	 * Add class .ep-is-dev to the body element if we are in debug mode
@@ -210,67 +156,6 @@ class EP {
 		if ($this->is_debug) $classes[] = "ep-is-dev";
 		return $classes;
 	}
-
-
-	/**
-	 * Remove x pingback from headers
-	 */
-	function remove_x_pingback_header($headers) {
-	    unset($headers['X-Pingback']);
-	    return $headers;
-	}
-
-	/**
-	 * Cleanup head by removing lots of things
-	 */
-	function cleanup_head() {
-
-		remove_filter("wp_head", "wp_generator");
-		remove_action('wp_head', 'rsd_link');
-		remove_action('wp_head', 'wlwmanifest_link');
-		remove_action('wp_head', 'feed_links_extra', 3 );
-		remove_action('wp_head', 'index_rel_link' ); // index link
-		remove_action('wp_head', 'parent_post_rel_link', 10, 0 ); // prev link
-		remove_action('wp_head', 'adjacent_posts_rel_link', 10, 0 );
-		remove_action('wp_head', 'adjacent_posts_rel_link_wp_head', 10, 0 );
-		remove_action('wp_head', 'rel_canonical');
-		add_filter("show_recent_comments_widget_style", "__return_false");
-
-	}
-
-	/**
-	 * Cleanup dashboard by removing dashboards meta boxes
-	 */
-	function cleanup_dashboard() {
-
-		// remove_meta_box('dashboard_right_now', 'dashboard', 'normal');
-		remove_meta_box('dashboard_quick_press', 'dashboard', 'normal');  // quick press
-		remove_meta_box('dashboard_recent_drafts', 'dashboard', 'normal');  // recent drafts
-		remove_meta_box('dashboard_recent_comments', 'dashboard', 'normal');
-		remove_meta_box('dashboard_incoming_links', 'dashboard', 'normal');
-		remove_meta_box('dashboard_plugins', 'dashboard', 'normal');
-		remove_meta_box('dashboard_primary', 'dashboard', 'normal');
-		remove_meta_box('dashboard_secondary', 'dashboard', 'normal');
-
-		// Remove metabox for WPML
-		$wpml_dasbhboard_widget_id = "icl_dashboard_widget";
-		remove_meta_box( $wpml_dasbhboard_widget_id, "dashboard", "normal" );
-
-	}
-
-	/**
-	 * Cleanup menu by reoving posts and comments for example
-	 */
-	function cleanup_admin_menu() {
-
-		// Remove (blog) posts menu
-		remove_menu_page("edit.php");
-		
-		// Remove comments menu
-		remove_menu_page("edit-comments.php");
-
-	}
-
 	
 	/**
 	 * Add tagline to title if we are of front page or home
@@ -338,7 +223,7 @@ class EP {
 		$latest_file_time = $files[key($files)];
 		
 		// queue styles
-		wp_enqueue_style("style_screen", get_template_directory_uri() . '/style.css', null, $latest_file_time);
+		wp_enqueue_style("style_screen", get_template_directory_uri() . '/css/app.css', null, $latest_file_time);
 
 		// queue scripts
 		wp_enqueue_script("ep_scripts", get_template_directory_uri() . '/js/ep/scripts.js', null, $latest_file_time, true);
@@ -398,4 +283,3 @@ class EP {
 
 $GLOBALS["ep"] = new EP();
 $GLOBALS["ep"]->init();
-
