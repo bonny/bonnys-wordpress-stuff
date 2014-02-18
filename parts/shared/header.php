@@ -4,8 +4,12 @@
 	<?php bloginfo( 'description' ); ?>
 	<?php get_search_form(); ?>
 
-	<h2>Menu</h2>
-	<?php
-	wp_list_pages( array( 'depth' => 1,'sort_column' => 'menu_order','title_li' => '' ) );
-	?>
+	<nav class="nav nav--primary">
+		<h2>Menu</h2>
+		<?php
+		echo "<ul>";
+		wp_list_pages( array( 'depth' => 2,'sort_column' => 'menu_order','title_li' => '' ) );
+		echo "</ul>";
+		?>
+	</nav>
 </header>
