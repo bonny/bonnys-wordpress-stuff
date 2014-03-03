@@ -42,14 +42,27 @@ add_action("login_head", function() {
 	
 	if ( file_exists( $image_and_path ) ) {
 		$image_uri = trailingslashit( get_stylesheet_directory_uri() ) . $image_filename;
+		$image_size = getimagesize($image_and_path);
+		$css_width = "";
+		$css_height = "";
+		$css_background_size = "";
+		if (false !== $image_size) {
+			$css_width = "{$image_size[0]}px";
+			$css_height = "{$image_size[1]}px";
+			$css_background_size = "$css_width $css_height";
+		}
 		?>
 		<style>
 			.login h1 a {
 				background-image: url(<?php echo $image_uri; ?>);
+				<?php if ($css_width && $css_height) { ?>
+					width: <?php echo $css_width ?>;
+					height: <?php echo $css_height ?>;
+					background-size: <?php echo $css_background_size ?>;
+				<?php } ?>
 			}
 		</style>
 		<?php
 	}
 
 });
-	
