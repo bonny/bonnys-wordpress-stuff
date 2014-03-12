@@ -9,7 +9,7 @@
  * After this action the same menu item looks like this:
  * <li class="menu-item current-menu-item menu-item-has-children">
  */
-add_action("nav_menu_css_class", function($classes, $item, $args) {
+add_action("nav_menu_css_class", function($classes, $item = null, $args = null) {
 
 	// Always keep classes in this array
 	$arr_keepers = array(
