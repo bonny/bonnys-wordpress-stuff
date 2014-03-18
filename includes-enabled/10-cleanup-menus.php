@@ -37,6 +37,11 @@ add_action("nav_menu_css_class", function($classes, $item = null, $args = null) 
 			$one_class = "";
 		}
 
+		// Dito for current_page_parent and current_page_ancestor
+		if ( "current_page_parent" == $one_class || "current_page_ancestor" == $one_class) {
+			$one_class = "";
+		}
+
 		// Remove page-item-56 or menu-item-nn, i.e. classes that begin with page-item- or menu-item-
 		if ( strpos($one_class, "page-item-") !== false) {
 			$one_class = "";
