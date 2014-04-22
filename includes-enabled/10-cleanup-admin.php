@@ -7,6 +7,29 @@
 namespace EP\admin\cleanup;
 
 /**
+ * Make file names of media attachments work better with more server configs:
+ * - Remove chars like åäö
+ * - Remove percent signs
+ * - Make file names lowercase
+ */
+add_filter('sanitize_file_name', function($filename, $filename_raw) {
+
+	// By default WP does allow chars like åäöÅÄÖ in filenames,
+	// but I've had enough problems with that to know that I want them removed
+	$filename = remove_accents($filename);
+
+	// Remove percent signs. Very simple replace, does not care that space = "%20", just removed the "%"
+	$filename = str_replace('%', '', $filename);
+
+	// Also make all filenames lowercase, just to minimize risk of problems with dev server having 
+	// non case sensitive file system and live server having case sensitive
+	$filename = mb_strtolower($filename);
+
+	return $filename;
+
+}, 10, 2);
+
+/**
  * Cleanup dashboard by removing dashboards meta boxes
  */
 add_action("admin_init", function() {
