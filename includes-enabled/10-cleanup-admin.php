@@ -16,6 +16,9 @@ add_filter('sanitize_file_name', function($filename, $filename_raw) {
 
 	// By default WP does allow chars like åäöÅÄÖ in filenames,
 	// but I've had enough problems with that to know that I want them removed
+	//
+	// This will hopefully be fixed by default in future WP version:
+	// https://core.trac.wordpress.org/ticket/22363
 	$filename = remove_accents($filename);
 
 	// Remove percent signs. Very simple replace, does not care that space = "%20", just removed the "%"
