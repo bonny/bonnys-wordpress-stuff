@@ -2,34 +2,50 @@
 
 namespace EP\admin\relativize_links;
 
+
 /**
- * Makes the permalink for a post/page/custom post type more futureproof by creating
- * relative paths instead of absolute paths.
+ * Makes links and images added in TinyMCE use relative paths (instead of absolute)
+ *
  * This is a benefit when developing a website on several domains, so you don't have to change all
  * links from http://beta.example.com/ to http://example.com/.
- * Only applies when adding links in tidy editor, because to many places assume absolute urls
  */
-function relativize_links() {
+function relativize_tinymce_links() {
 
-	/*
-	Notes about some disabled filters:
-	- "theme_root_uri" led to problems enqueing styles when wp is in subdir
-	- "wp_get_attachment_url" will have problem with photon from the jetpack plugin
-	*/
+	if ( 
+		
+		// used when fetching posts to insert
+		( isset($_POST["action"]) && $_POST["action"] === "wp-link-ajax" )
 
-	$arr_filters = array(
-		"post_link", 
-		"post_type_link", 
-		"page_link", 
-		"term_link", 
-		"tag_link", 
-		"category_link"
-	);
+		// used when fetching images to show in media editor
+		|| ( isset($_POST["action"]) && $_POST["action"] === "query-attachments" )
 
- 	foreach ( $arr_filters as $filter_name ) {
- 		add_filter( $filter_name, 'wp_make_link_relative' );
- 	}
+		// used when sending image from media browser to tiny editor
+		|| ( isset($_POST["action"]) && $_POST["action"] === "send-attachment-to-editor" )
+
+		// used when editing an image and then replacing the image in the tiny editor
+		|| ( isset($_POST["action"]) && $_POST["action"] === "get-attachment" )
+	
+	) {	
+
+		$arr_filters = array(
+			"post_link", 
+			"post_type_link", 
+			"page_link", 
+			"term_link", 
+			"tag_link", 
+			"category_link",
+			"wp_get_attachment_url",
+			"wp_get_attachment_thumb_url",
+			"attachment_link"
+		);
+	
+	 	foreach ( $arr_filters as $filter_name ) {
+	 		add_filter( $filter_name, 'wp_make_link_relative' );
+	 	}
+
+	}
 
 }
 
-add_action("admin_init", __NAMESPACE__ . '\relativize_links');
+add_action("admin_init", __NAMESPACE__ . '\relativize_tinymce_links');
+
