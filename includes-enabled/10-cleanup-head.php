@@ -19,5 +19,12 @@ add_action("init", function() {
 	remove_action('wp_head', 'rel_canonical');
 	add_filter("show_recent_comments_widget_style", "__return_false");
 
+	// remove yoast seo comment
+	if ( isset( $GLOBALS['wpseo_front'] ) && is_a( $GLOBALS['wpseo_front'], "WPSEO_Frontend" )  ) {
+
+		remove_action( 'wpseo_head', array( $GLOBALS['wpseo_front'], 'debug_marker' ), 2 );
+
+	}
+
 });
 
