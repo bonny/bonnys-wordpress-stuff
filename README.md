@@ -4,7 +4,7 @@ A starter theme that I (often) use when creating WordPress based websites. It's 
 
 ## What it does
 
-* Adds some nice helper functions. (Todo: create page with info.)
+* Adds some nice [helper functions](#functions).
 
 * Removes all meta boxes from the dashboard, except the "Right now"-box. Even WordPress themself says [no one is using those other meta boxes](http://make.wordpress.org/ui/2013/08/21/3-8-dashboard-plugin/).
 
@@ -26,6 +26,13 @@ A starter theme that I (often) use when creating WordPress based websites. It's 
  
 * Client logo on login screen
   Add a file in your theme root called `login-client-logo.png` and it will be shown instead of the WordPress default logo.
+
+## Helper functions
+
+A collection of functions that I find useful:
+
+
+
 
 ## wp-config.php
 
