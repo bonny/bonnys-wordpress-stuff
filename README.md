@@ -6,7 +6,9 @@ A starter theme that I (often) use when creating WordPress based websites. It's 
 
 - [What id does](#what-it-does)
 - [Helper functions](#helper-functions)
-- [wp-config.php](#wp-config.php)
+- [wp-config.php](#wp-configphp)
+- [Recommended plugins][#recommended-plugins] 
+- [Maybe todo](#maybe-todo)
 
 ## What it does
 
