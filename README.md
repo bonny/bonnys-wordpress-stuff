@@ -2,6 +2,12 @@
 
 A starter theme that I (often) use when creating WordPress based websites. It's not perfect, but it helps me to get started.
 
+## Table of Contents
+
+- [What id does](#what-it-does)
+- [Helper functions](#helper-functions)
+- [wp-config.php](#wp-config.php)
+
 ## What it does
 
 * Adds some nice [helper functions](#helper-functions).
