@@ -21,7 +21,11 @@ A starter theme that I (often) use when creating WordPress based websites. It's 
 * Uses [SUIT naming conventions for CSS](https://github.com/suitcss/suit/blob/master/doc/components.md)
 
 * Finds last modified time of css and js so you easily can append those for cachebusting
-- style.css is prepared with the CSS from the HTML5 Boilerplate (including normalize.css)
+
+* style.css is prepared with the CSS from the HTML5 Boilerplate (including normalize.css)
+ 
+* Client logo on login screen
+  Add a file in your theme root called `login-client-logo.png` and it will be shown instead of the WordPress default logo.
 
 ## wp-config.php
 
