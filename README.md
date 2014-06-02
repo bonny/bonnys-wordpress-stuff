@@ -37,7 +37,11 @@ A starter theme that I (often) use when creating WordPress based websites. It's 
 
 ## Helper functions
 
-A collection of functions that I find useful:
+A collection of functions that I find useful.
+
+### Text blocks helper
+
+### Other
 
 @TODO: document these better, with examples. Only keep the ones I use.
 
