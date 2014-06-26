@@ -63,3 +63,8 @@ define('WP_SITEURL', "http://" . $_SERVER["SERVER_NAME"] . "/wp");
 * [EWWW Image Optimizer](http://wordpress.org/plugins/ewww-image-optimizer/)
 * [InfiniteWP Client](http://wordpress.org/plugins/iwp-client/)
 * [W3 Total cache](http://wordpress.org/plugins/w3-total-cache/)
+
+## PLugins to test
+
+* https://github.com/norcross/wp-local-dev-env
+* 
