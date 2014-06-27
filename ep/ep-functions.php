@@ -676,22 +676,28 @@ function ep_get_teaser_or_body() {
  * If any of them don't exist, their <div> won't be outputed
  *
  * @author Pär Thernström, November, 2010
+ * @param int or wp_post object $post_id
  */
 function ep_get_teaser_and_body($post_id = NULL) {
 
 	$out = "";
 	
-	global $post;
+	global $post, $more;
+	
 	$post_org = $post;
+	$more_org = $more;
 
-	if (!$post_id) {
+	if ( ! $post_id) {
+		// Use global post object if post_id is not set
 		$post_id = $post->ID;
+	} elseif ( is_a($post_id, "WP_Post") ) {
+		$post_id = $post_id->ID;
 	}
 
-	global $post;
 	$post_org = $post;
 	$post = get_post($post_id);
 	setup_postdata($post);
+	$more = 1;
 
 	// only posts that are published are allowed
 	if ($post->post_status != "publish") {
@@ -725,7 +731,8 @@ function ep_get_teaser_and_body($post_id = NULL) {
 	$out .= $teaser . $body;
 
 	//echo "yyy{$out}yyy";
-
+	
+	$more = $more_org;
 	$post = $post_org;
 	setup_postdata($post);
 
