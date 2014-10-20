@@ -10,6 +10,8 @@ define("THUMBNAIL_SIZE", 75);
 
 add_filter('manage_posts_columns', __NAMESPACE__ . '\posts_columns', 5);
 add_action('manage_posts_custom_column', __NAMESPACE__ . '\posts_custom_columns', 5, 2);
+add_filter('manage_pages_columns', __NAMESPACE__ . '\posts_columns', 5);
+add_action('manage_pages_custom_column', __NAMESPACE__ . '\posts_custom_columns', 5, 2);
 add_action('admin_head', __NAMESPACE__ . '\admin_head');
 
 // Add styles
